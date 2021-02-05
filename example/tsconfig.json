@@ -3,17 +3,17 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "src",
-    "rootDir": "./src"
-  },
-  "plugins": [
-    {
-      "transform": "../dist/main.js",
-      "after": true,
-      "afterDeclarations": true,
-      "type": "config",
-      "nodeModulesDir": "./node_modules",
-      "nodeModulesOutputDir": "./node_modules",
-      "baseDir": "./src"
-    }
-  ]
+    "rootDir": "./src",
+    "plugins": [
+      {
+        "transform": "../",
+        "after": true,
+        "afterDeclarations": true,
+        "type": "config",
+        "nodeModulesDir": "./node_modules",
+        "nodeModulesOutputDir": "./node_modules",
+        "baseDir": "./src"
+      }
+    ]
+  }
 }

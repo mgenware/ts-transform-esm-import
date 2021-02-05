@@ -1,7 +1,7 @@
 /* eslint-disable import/extensions */
 import * as ts from 'typescript';
 import { sync as globSync } from 'glob';
-import { transform as dtsPathTransform, Opts as PathTransformOpts } from '../dist/main.js';
+import { default as dtsPathTransform, Opts as PathTransformOpts } from '../dist/main.js';
 
 const CJS_CONFIG: ts.CompilerOptions = {
   experimentalDecorators: true,

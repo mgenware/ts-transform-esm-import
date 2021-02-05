@@ -184,3 +184,5 @@ export function transform(opts: Opts): ts.TransformerFactory<ts.SourceFile | ts.
     return (sf: ts.SourceFile | ts.Bundle) => ts.visitNode(sf, importExportVisitor(ctx, sf, opts));
   };
 }
+
+export default transform;

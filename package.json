@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Rewrite TypeScript import paths to ES Modules import paths",
   "main": "./dist/main.js",
-  "types": "dist/main.d.ts",
+  "types": "./dist/main.d.ts",
   "scripts": {
     "r": "daizong",
     "test": "daizong build"
