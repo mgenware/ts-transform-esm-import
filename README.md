@@ -1,53 +1,39 @@
-# ts-transform-import-path-rewrite
+# ts-transform-esm-import (WIP)
 
-![build status](https://travis-ci.org/dropbox/ts-transform-import-path-rewrite.svg?branch=master)
+[![Build Status](https://github.com/mgenware/ts-transform-esm-import/workflows/Build/badge.svg)](https://github.com/mgenware/ts-transform-esm-import/actions)
+[![npm version](https://img.shields.io/npm/v/ts-transform-esm-import.svg?style=flat-square)](https://npmjs.com/package/ts-transform-esm-import)
+[![Node.js Version](http://img.shields.io/node/v/ts-transform-esm-import.svg?style=flat-square)](https://nodejs.org/en/)
 
-This is a TypeScript AST Transformer that allows you to rewrite import path in output JS & `d.ts` files accordingly. The primary use case for this is to mitigate different build system import structure, such as relative vs absolute `import` and aliasing output `import` paths.
+Rewrite TypeScript import paths to ES Modules import paths. A fork of [ts-transform-import-path-rewrite](https://github.com/dropbox/ts-transform-import-path-rewrite).
 
-## Usage
+Without ts-transform-esm-import:
 
-### ttypescript
-Example for ttypescript usage is in `examples/ttypescript`. Run `npx ttsc`.
-
-### Compiler Wrapper
-First of all, you need some level of familiarity with the [TypeScript Compiler API](https://github.com/Microsoft/TypeScript/wiki/Using-the-Compiler-API).
-
-`compile.ts` & tests should have examples of how this works. The available options are:
-
-### `projectBaseDir: string`
-This is the base directory of your project folder. This is primarily used to determine the correct path when rewriting relative `import` to `absolute` import.
-
-### `project?: string`
-Project name to rewrite relative `import` to. For example:
 ```ts
-import foo from './foo'
-// Becomes
-import foo from 'my-project-name/foo'
-```
- 
-### `rewrite?(importPath: string, sourceFilePath: string): string`
-Custom rewrite function to rewrite any `import` path we encounter to any new `import` path.
+// Absolute paths: an npm module.
+import 'npm';
+import 'npm/lib';
 
-### `alias?: Record<string, string>`
-Alias regex map to replace, e.g:
-```json
-{
-    "^(foo)$": "external/$1"
-}
+// Absolute paths: make use of `tsconfig.json` `baseUrl`.
+import 'subDir/file';
+import 'rootFile';
+
+// Relative paths.
+import './rootFile';
+import './subDir/file';
 ```
 
-## License
+With ts-transform-esm-import, the code above compiles to ES modules friendly code:
 
-Copyright (c) 2018 Dropbox, Inc.
+```ts
+// Absolute paths: an npm module.
+import 'npm/dist/main.js'; // ESM "exports" file auto resolved.
+import 'npm/lib.js';
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+// Absolute paths: make use of `tsconfig.json` `baseUrl`.
+import './subDir/file.js';
+import './rootFile.js';
 
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+// Relative paths.
+import './rootFile.js';
+import './subDir/file.js';
+```
