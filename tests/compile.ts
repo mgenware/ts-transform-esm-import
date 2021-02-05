@@ -1,6 +1,7 @@
+/* eslint-disable import/extensions */
 import * as ts from 'typescript';
 import { sync as globSync } from 'glob';
-import { transform as dtsPathTransform, Opts as PathTransformOpts } from './src';
+import { transform as dtsPathTransform, Opts as PathTransformOpts } from '../dist/main.js';
 
 const CJS_CONFIG: ts.CompilerOptions = {
   experimentalDecorators: true,
@@ -35,10 +36,15 @@ export default function compile(
   const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
 
   allDiagnostics.forEach((diagnostic) => {
+    const { file } = diagnostic;
+    if (!file) {
+      throw new Error(`Unexpected null file of at diagnostic ${diagnostic}`);
+    }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const { line, character } = diagnostic.file!.getLineAndCharacterOfPosition(diagnostic.start);
+    const { line, character } = file.getLineAndCharacterOfPosition(diagnostic.start!);
     const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-    console.log(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+    // eslint-disable-next-line no-console
+    console.log(`${file.fileName} (${line + 1},${character + 1}): ${message}`);
   });
 
   return msgs;

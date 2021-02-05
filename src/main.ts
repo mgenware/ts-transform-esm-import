@@ -37,7 +37,22 @@ function mustGetNodeModulesOutputDir(opts: Opts): string {
   return opts.nodeModulesOutputDir;
 }
 
-function importExportVisitor(ctx: ts.TransformationContext, sf: ts.SourceFile, opts: Opts) {
+function importExportVisitor(
+  ctx: ts.TransformationContext,
+  sfOrBundle: ts.SourceFile | ts.Bundle,
+  opts: Opts,
+) {
+  let sf: ts.SourceFile;
+  if (ts.isSourceFile(sfOrBundle)) {
+    sf = sfOrBundle;
+  } else if (ts.isBundle(sfOrBundle)) {
+    const source = sfOrBundle.sourceFiles[0];
+    if (!source) {
+      throw new Error(`No source file found in bundle ${sfOrBundle}`);
+    }
+    sf = source;
+  }
+
   const visitor: ts.Visitor = (node: ts.Node): ts.Node => {
     let importPath = '';
     if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier) {
@@ -163,9 +178,9 @@ function importExportVisitor(ctx: ts.TransformationContext, sf: ts.SourceFile, o
   return visitor;
 }
 
-export function transform(opts: Opts): ts.TransformerFactory<ts.SourceFile> {
+export function transform(opts: Opts): ts.TransformerFactory<ts.SourceFile | ts.Bundle> {
   // eslint-disable-next-line arrow-body-style
-  return (ctx: ts.TransformationContext): ts.Transformer<ts.SourceFile> => {
-    return (sf: ts.SourceFile) => ts.visitNode(sf, importExportVisitor(ctx, sf, opts));
+  return (ctx: ts.TransformationContext): ts.Transformer<ts.SourceFile | ts.Bundle> => {
+    return (sf: ts.SourceFile | ts.Bundle) => ts.visitNode(sf, importExportVisitor(ctx, sf, opts));
   };
 }

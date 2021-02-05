@@ -1,14 +1,18 @@
 /* eslint-disable import/extensions */
-import { resolve, join } from 'path';
+import { join } from 'path';
 import * as assert from 'assert';
 import { promises as fsPromises } from 'fs';
-import compile from './compile';
+import compile from './compile.js';
 import { Opts as PathTransformOpts } from '../dist/main.js';
 
+function fixture(s: string): string {
+  return join('./tests/fixture', s);
+}
+
 async function t(name: string, opt: PathTransformOpts, output: string, defsOutput: string) {
-  compile(resolve(__dirname, `fixture/${name}.ts`), opt);
-  const outFile = resolve(__dirname, `fixture/${name}.js`);
-  const defsOutFile = resolve(__dirname, `fixture/${name}.d.ts`);
+  compile(fixture(`/${name}.ts`), opt);
+  const outFile = fixture(`${name}.js`);
+  const defsOutFile = fixture(`${name}.d.ts`);
   assert.strictEqual(await fsPromises.readFile(outFile, 'utf8'), output);
   assert.strictEqual(await fsPromises.readFile(defsOutFile, 'utf8'), defsOutput);
 }
@@ -43,7 +47,7 @@ import "sub/sub.js";
 it('Resolve baseUrl', async () => {
   await t(
     'baseDir',
-    { baseDir: join(__dirname, 'fixture') },
+    { baseDir: fixture('') },
     `import { dummy } from "./bar";
 import "./sub/sub.js";
 console.log(dummy);
@@ -71,7 +75,7 @@ it('Resolve node modules', async () => {
   await t(
     'nodeModules',
     {
-      nodeModulesDir: join(__dirname, 'nodeModulesDir'),
+      nodeModulesDir: './tests/nodeModulesDir',
       nodeModulesOutputDir: '../nodeModulesDir',
     },
     `import { dummy } from "./bar";

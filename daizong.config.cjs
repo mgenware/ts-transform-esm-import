@@ -1,19 +1,14 @@
 module.exports = {
-  // Starts development mode, which watches and compiles all source files including tests.
+  // Starts development mode: watches and compiles all source files including tests.
   dev: {
     run: ['#clean', 'tsc -b tests -w'],
     envGroups: ['development'],
   },
-  serve: {
-    run: ['web-dev-server --open demo/ --node-resolve --watch'],
-  },
 
   // Runs tests (you need to build the project first).
   t: {
-    run: 'web-test-runner dist_tests/**/*.test.js --node-resolve',
-  },
-  tw: {
-    run: 'web-test-runner dist_tests/**/*.test.js --node-resolve --watch',
+    run:
+      'mocha --parallel --require source-map-support/register dist_tests/**/*.test.js --timeout 5000',
   },
 
   // Cleans, lints, compiles sources and runs tests.

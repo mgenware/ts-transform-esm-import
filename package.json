@@ -2,8 +2,7 @@
   "name": "ts-transform-esm-import",
   "version": "0.0.0",
   "description": "Rewrite TypeScript import paths to ES Modules import paths",
-  "type": "module",
-  "exports": "./dist/main.js",
+  "main": "./dist/main.js",
   "types": "dist/main.d.ts",
   "scripts": {
     "r": "daizong",
