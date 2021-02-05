@@ -1,0 +1,19 @@
+{
+  "extends": "mgenware-tsconfig-node",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": "src",
+    "rootDir": "./src"
+  },
+  "plugins": [
+    {
+      "transform": "../dist/main.js",
+      "after": true,
+      "afterDeclarations": true,
+      "type": "config",
+      "nodeModulesDir": "./node_modules",
+      "nodeModulesOutputDir": "./node_modules",
+      "baseDir": "./src"
+    }
+  ]
+}

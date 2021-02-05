@@ -1,4 +1,10 @@
-# ts-transform-esm-import (WIP)
+# ts-transform-esm-import
+
+---
+
+## Work in progress.
+
+---
 
 [![Build Status](https://github.com/mgenware/ts-transform-esm-import/workflows/Build/badge.svg)](https://github.com/mgenware/ts-transform-esm-import/actions)
 [![npm version](https://img.shields.io/npm/v/ts-transform-esm-import.svg?style=flat-square)](https://npmjs.com/package/ts-transform-esm-import)
