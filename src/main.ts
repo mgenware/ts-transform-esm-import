@@ -108,7 +108,9 @@ function importExportVisitor(
                   `Unexpected empty package.json content in import "${s}", path "${packagePath}"`,
                 );
               }
-              const pkgMain = pkgInfo.exports as string | undefined;
+              const pkgMain = (pkgInfo.exports ?? pkgInfo.module ?? pkgInfo.main) as
+                | string
+                | undefined;
               // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
               if (!pkgMain) {
                 throw new Error(`"exports" field not found in package.json "${packagePath}"`);
