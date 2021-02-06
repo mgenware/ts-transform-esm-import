@@ -8,7 +8,6 @@
 
 [![Build Status](https://github.com/mgenware/ts-transform-esm-import/workflows/Build/badge.svg)](https://github.com/mgenware/ts-transform-esm-import/actions)
 [![npm version](https://img.shields.io/npm/v/ts-transform-esm-import.svg?style=flat-square)](https://npmjs.com/package/ts-transform-esm-import)
-[![Node.js Version](http://img.shields.io/node/v/ts-transform-esm-import.svg?style=flat-square)](https://nodejs.org/en/)
 
 Rewrite TypeScript import paths to ES Modules import paths. A fork of [ts-transform-import-path-rewrite](https://github.com/dropbox/ts-transform-import-path-rewrite).
 
