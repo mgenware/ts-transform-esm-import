@@ -24,6 +24,14 @@ function fileExists(s: string): boolean {
   return fs.existsSync(s);
 }
 
+function relativePath(from: string, to: string): string {
+  const res = path.relative(from, to);
+  if (res[0] !== '.') {
+    return `./${res}`;
+  }
+  return res;
+}
+
 function isDynamicImport(node: ts.Node): node is ts.CallExpression {
   return ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword;
 }
@@ -78,30 +86,32 @@ function importExportVisitor(
       // Rewrite absolute imports.
       let resolved = false;
       if (s[0] !== '.') {
+        // `importPath` is absolute.
+        const sourcePath = path.resolve(sf.fileName);
+        const sourceDirPath = path.dirname(sourcePath);
+
         if (opts.baseDir) {
-          const baseDirFile = jsPath(path.join(opts.baseDir, s));
-          if (fileExists(baseDirFile)) {
-            s = jsPath(`./${s}`);
+          const jsFile = jsPath(path.join(opts.baseDir, s));
+          if (fileExists(jsFile)) {
+            s = relativePath(sourceDirPath, jsFile);
             resolved = true;
           }
         }
         if (!resolved && opts.nodeModulesDir) {
           const { nodeModulesDir } = opts;
-          const sourcePath = path.resolve(sf.fileName);
-          const sourceDirPath = path.dirname(sourcePath);
 
           // Check if path contains directories like `import 'foo/abc/def'`.
           if (s.includes('/')) {
             // Check if `foo/abc/def.js` exists.
             let jsFile = jsPath(path.join(nodeModulesDir, s));
             if (fileExists(jsFile)) {
-              s = path.relative(sourceDirPath, jsFile);
+              s = relativePath(sourceDirPath, jsFile);
               resolved = true;
             } else {
               // Check if `foo/abc/def/index.js` exists.
               jsFile = path.join(nodeModulesDir, s, indexJS);
               if (fileExists(jsFile)) {
-                s = path.relative(sourceDirPath, jsFile);
+                s = relativePath(sourceDirPath, jsFile);
                 resolved = true;
               }
             }
@@ -124,13 +134,13 @@ function importExportVisitor(
                 indexJS) as string;
               let jsFile = jsPath(path.join(nodeModulesDir, s, pkgMain));
               if (fileExists(jsFile)) {
-                s = path.relative(sourceDirPath, jsFile);
+                s = relativePath(sourceDirPath, jsFile);
                 resolved = true;
               } else {
                 // Check if `module/index.js` exists.
                 jsFile = path.join(nodeModulesDir, s, indexJS);
                 if (fileExists(jsFile)) {
-                  s = path.relative(sourceDirPath, jsFile);
+                  s = relativePath(sourceDirPath, jsFile);
                   resolved = true;
                 }
               }
@@ -141,8 +151,10 @@ function importExportVisitor(
           }
         } // end of checking `opts.nodeModulesDir`.
       } else {
+        // `importPath` is relative.
         // Add js extension to relative paths.
         s = jsPath(s);
+        resolved = true;
       }
 
       // Only rewrite relative path
