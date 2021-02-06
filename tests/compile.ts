@@ -16,6 +16,7 @@ const CJS_CONFIG: ts.CompilerOptions = {
   declaration: true,
   baseUrl: __dirname,
   target: ts.ScriptTarget.ESNext,
+  newLine: ts.NewLineKind.LineFeed,
 };
 
 export default function compile(

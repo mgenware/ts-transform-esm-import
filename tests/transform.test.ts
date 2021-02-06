@@ -103,3 +103,59 @@ import 'sub/sub.js';
 `,
   );
 });
+
+it('Resolve baseUrl (subdir)', async () => {
+  await t(
+    'sub/baseDir',
+    { baseDir: fixture('') },
+    `import 'fs';
+import '../../nodeModulesDir/node-a/foo/main.js';
+import '../../nodeModulesDir/node-b/file.js';
+import './sub.js';
+import './sub.js';
+import 'foo';
+import '../foo.js';
+import 'sub/sub';
+import 'sub/sub.js';
+`,
+    `import 'fs';
+import 'node-a';
+import 'node-b/file';
+import './sub.js';
+import './sub.js';
+import '../foo.js';
+import '../foo.js';
+import './sub.js';
+import './sub.js';    
+`,
+  );
+});
+
+it('Resolve node modules (subdir)', async () => {
+  await t(
+    'sub/nodeModules',
+    {
+      nodeModulesDir: './tests/nodeModulesDir',
+    },
+    `import 'fs';
+import '../../nodeModulesDir/node-a/foo/main.js';
+import '../../nodeModulesDir/node-b/file.js';
+import './sub';
+import './sub.js';
+import 'foo';
+import '../foo';
+import 'sub/sub';
+import 'sub/sub.js';
+`,
+    `import 'fs';
+import '../../nodeModulesDir/node-a/foo/main.js';
+import '../../nodeModulesDir/node-b/file.js';
+import './sub';
+import './sub.js';
+import 'foo';
+import '../foo';
+import 'sub/sub';
+import 'sub/sub.js';
+`,
+  );
+});
