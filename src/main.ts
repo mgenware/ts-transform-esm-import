@@ -9,9 +9,6 @@ import * as path from 'path';
 export interface Opts {
   baseDir?: string;
   nodeModulesDir?: string;
-  enforceExtension?: string;
-  preprocess?(importPath: string, sourceFilePath: string): string;
-  postprocess?(importPath: string, sourceFilePath: string): string;
 }
 
 function jsPath(s: string): string {
@@ -75,9 +72,6 @@ function importExportVisitor(
       }
 
       let s = importPath;
-      if (opts.preprocess) {
-        s = opts.preprocess(importPath, sf.fileName);
-      }
 
       // Rewrite absolute imports.
       let resolved = false;
