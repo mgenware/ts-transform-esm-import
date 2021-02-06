@@ -6,6 +6,8 @@ import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
 
+const indexJS = 'index.js';
+
 export interface Opts {
   baseDir?: string;
   nodeModulesDir?: string;
@@ -88,12 +90,20 @@ function importExportVisitor(
           const sourcePath = path.resolve(sf.fileName);
           const sourceDirPath = path.dirname(sourcePath);
 
+          // Check if path contains directories like `import 'foo/abc/def'`.
           if (s.includes('/')) {
-            // Something like `import 'foo/abc/def'`
-            const filePath = jsPath(path.join(nodeModulesDir, s));
-            if (fileExists(filePath)) {
-              s = path.relative(sourceDirPath, filePath);
+            // Check if `foo/abc/def.js` exists.
+            let jsFile = jsPath(path.join(nodeModulesDir, s));
+            if (fileExists(jsFile)) {
+              s = path.relative(sourceDirPath, jsFile);
               resolved = true;
+            } else {
+              // Check if `foo/abc/def/index.js` exists.
+              jsFile = path.join(nodeModulesDir, s, indexJS);
+              if (fileExists(jsFile)) {
+                s = path.relative(sourceDirPath, jsFile);
+                resolved = true;
+              }
             }
           }
           if (!resolved) {
@@ -108,21 +118,28 @@ function importExportVisitor(
                   `Unexpected empty package.json content in import "${s}", path "${packagePath}"`,
                 );
               }
-              const pkgMain = (pkgInfo.exports ?? pkgInfo.module ?? pkgInfo.main) as
-                | string
-                | undefined;
-              // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-              if (!pkgMain) {
-                throw new Error(`"exports" field not found in package.json "${packagePath}"`);
-              }
-              const filePath = jsPath(path.join(nodeModulesDir, s, pkgMain));
-              if (fileExists(filePath)) {
-                s = path.relative(sourceDirPath, filePath);
+              const pkgMain = (pkgInfo.exports ??
+                pkgInfo.module ??
+                pkgInfo.main ??
+                indexJS) as string;
+              let jsFile = jsPath(path.join(nodeModulesDir, s, pkgMain));
+              if (fileExists(jsFile)) {
+                s = path.relative(sourceDirPath, jsFile);
                 resolved = true;
+              } else {
+                // Check if `module/index.js` exists.
+                jsFile = path.join(nodeModulesDir, s, indexJS);
+                if (fileExists(jsFile)) {
+                  s = path.relative(sourceDirPath, jsFile);
+                  resolved = true;
+                }
               }
+            } else {
+              // Never throw errors on unrecognized absolute module names, cuz they
+              // might be node builtin modules.
             }
           }
-        }
+        } // end of checking `opts.nodeModulesDir`.
       } else {
         // Add js extension to relative paths.
         s = jsPath(s);
