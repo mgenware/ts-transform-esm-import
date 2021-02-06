@@ -44,11 +44,6 @@
     "@nodelib/fs.scandir" "2.1.4"
     fastq "^1.6.0"
 
-"@tsconfig/node14@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@tsconfig/node14/-/node14-1.0.0.tgz#5bd046e508b1ee90bc091766758838741fdefd6e"
-  integrity sha512-RKkL8eTdPv6t5EHgFKIVQgsDapugbuOptNd9OOunN/HAkzmmTnZELx1kNCK0rSdUYGmiFMM3rRQMAWiyp023LQ==
-
 "@types/glob@^7.1.1":
   version "7.1.3"
   resolved "https://registry.yarnpkg.com/@types/glob/-/glob-7.1.3.tgz#e6ba80f36b7daad2c685acd9266382e68985c183"
@@ -455,13 +450,6 @@ merge2@^1.2.3, merge2@^1.3.0:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/merge2/-/merge2-1.4.1.tgz#4368892f885e907455a6fd7dc55c0c9d404990ae"
   integrity sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
-
-mgenware-tsconfig-node@^14.0.2:
-  version "14.0.2"
-  resolved "https://registry.yarnpkg.com/mgenware-tsconfig-node/-/mgenware-tsconfig-node-14.0.2.tgz#ed3e5535dca55658aea00d74551f2639c70c5dae"
-  integrity sha512-MYqzOc9zKpLKAQa1tWAT0TAnG+vGnSDeFFN9LiFKLLifb84MzF7I7guSghdnEUnYOCglKPd/VTP5cux3MLLW6w==
-  dependencies:
-    "@tsconfig/node14" "^1.0.0"
 
 micromatch@^4.0.2:
   version "4.0.2"

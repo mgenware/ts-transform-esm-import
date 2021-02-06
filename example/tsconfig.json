@@ -1,6 +1,10 @@
 {
-  "extends": "mgenware-tsconfig-node",
   "compilerOptions": {
+    "declaration": true,
+    "newLine": "lf",
+    "strict": true,
+    "module": "ESNext",
+    "moduleResolution": "node",
     "outDir": "./dist",
     "baseUrl": "src",
     "rootDir": "./src",

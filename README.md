@@ -15,11 +15,11 @@ Rewrite TypeScript import paths to ES Modules import paths. A fork of [ts-transf
 Without ts-transform-esm-import:
 
 ```ts
-// Absolute paths: an npm module.
-import 'npm';
-import 'npm/lib';
+// Modules in `node_modules`.
+import 'npmModule';
+import 'npmModule/lib';
 
-// Absolute paths: make use of `tsconfig.json` `baseUrl`.
+// Modules in `tsconfig.baseUrl`.
 import 'subDir/file';
 import 'rootFile';
 
@@ -31,11 +31,11 @@ import './subDir/file';
 With ts-transform-esm-import, the code above compiles to ES modules friendly code:
 
 ```ts
-// Absolute paths: an npm module.
-import 'npm/dist/main.js'; // ESM "exports" file auto resolved.
-import 'npm/lib.js';
+// Modules in `node_modules`.
+import '../node_modules/npmModule/dist/main.js';
+import '../node_modules/npmModule/lib.js';
 
-// Absolute paths: make use of `tsconfig.json` `baseUrl`.
+// Modules in `tsconfig.baseUrl`.
 import './subDir/file.js';
 import './rootFile.js';
 
@@ -43,3 +43,44 @@ import './rootFile.js';
 import './rootFile.js';
 import './subDir/file.js';
 ```
+
+## Usage
+
+See the [example project](https://github.com/mgenware/ts-transform-esm-import/tree/main/example).
+
+- Install `typescript` and [ttypescript](https://github.com/cevek/ttypescript) for custom transformations.
+- Create a `tsconfig.json` and use this transform as a plugin.
+- Build project using `ttsc` instead of `tsc`.
+
+An example `package.json`
+
+```json
+{
+  "compilerOptions": {
+    "declaration": true,
+    "newLine": "lf",
+    "strict": true,
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "baseUrl": "src",
+    "rootDir": "./src",
+    "plugins": [
+      {
+        "transform": "ts-transform-esm-import",
+        "after": true,
+        "afterDeclarations": true,
+        "type": "config",
+        "nodeModulesDir": "./node_modules",
+        "baseDir": "./dist"
+      }
+    ]
+  }
+}
+```
+
+Options:
+
+- `baseDir` source files root directory, used for `baseUrl` rewriting.
+- `nodeModulesDir` `node_modules` directory, used for `node_modules` rewriting.
+- `after`, `afterDeclarations`, `type` see [ttypescript](https://github.com/cevek/ttypescript).
