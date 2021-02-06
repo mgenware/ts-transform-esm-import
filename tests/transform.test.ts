@@ -76,7 +76,6 @@ it('Resolve node modules', async () => {
     'nodeModules',
     {
       nodeModulesDir: './tests/nodeModulesDir',
-      nodeModulesOutputDir: '../nodeModulesDir',
     },
     `import { dummy } from "./bar";
 import "./sub/sub.js";

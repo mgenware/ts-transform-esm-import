@@ -9,7 +9,6 @@ import * as path from 'path';
 export interface Opts {
   baseDir?: string;
   nodeModulesDir?: string;
-  nodeModulesOutputDir?: string;
   enforceExtension?: string;
   preprocess?(importPath: string, sourceFilePath: string): string;
   postprocess?(importPath: string, sourceFilePath: string): string;
@@ -28,13 +27,6 @@ function fileExists(s: string): boolean {
 
 function isDynamicImport(node: ts.Node): node is ts.CallExpression {
   return ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword;
-}
-
-function mustGetNodeModulesOutputDir(opts: Opts): string {
-  if (!opts.nodeModulesOutputDir) {
-    throw new Error('`nodeModulesOutputDir` cannot be empty when `nodeModulesDir` is set');
-  }
-  return opts.nodeModulesOutputDir;
 }
 
 function importExportVisitor(
@@ -99,11 +91,14 @@ function importExportVisitor(
         }
         if (!resolved && opts.nodeModulesDir) {
           const { nodeModulesDir } = opts;
+          const sourcePath = path.resolve(sf.fileName);
+          const sourceDirPath = path.dirname(sourcePath);
+
           if (s.includes('/')) {
             // Something like `import 'foo/abc/def'`
             const filePath = jsPath(path.join(nodeModulesDir, s));
             if (fileExists(filePath)) {
-              s = jsPath(path.join(mustGetNodeModulesOutputDir(opts), s));
+              s = path.relative(sourceDirPath, filePath);
               resolved = true;
             }
           }
@@ -124,8 +119,11 @@ function importExportVisitor(
               if (!pkgMain) {
                 throw new Error(`"exports" field not found in package.json "${packagePath}"`);
               }
-              s = path.join(mustGetNodeModulesOutputDir(opts), s, pkgMain);
-              resolved = true;
+              const filePath = jsPath(path.join(nodeModulesDir, s, pkgMain));
+              if (fileExists(filePath)) {
+                s = path.relative(sourceDirPath, filePath);
+                resolved = true;
+              }
             }
           }
         }
