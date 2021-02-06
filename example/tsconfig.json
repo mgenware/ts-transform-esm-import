@@ -11,7 +11,7 @@
         "afterDeclarations": true,
         "type": "config",
         "nodeModulesDir": "./node_modules",
-        "baseDir": "./src"
+        "baseDir": "./dist"
       }
     ]
   }
