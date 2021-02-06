@@ -153,7 +153,7 @@ function importExportVisitor(
             node.decorators,
             node.modifiers,
             node.importClause,
-            ctx.factory.createStringLiteral(s),
+            ctx.factory.createStringLiteral(s, true),
           );
         } else if (ts.isExportDeclaration(node)) {
           return ctx.factory.updateExportDeclaration(
@@ -162,19 +162,19 @@ function importExportVisitor(
             node.modifiers,
             node.isTypeOnly,
             node.exportClause,
-            ctx.factory.createStringLiteral(s),
+            ctx.factory.createStringLiteral(s, true),
           );
         } else if (isDynamicImport(node)) {
           return ctx.factory.updateCallExpression(
             node,
             node.expression,
             node.typeArguments,
-            ctx.factory.createNodeArray([ctx.factory.createStringLiteral(s)]),
+            ctx.factory.createNodeArray([ctx.factory.createStringLiteral(s, true)]),
           );
         } else if (ts.isImportTypeNode(node)) {
           return ctx.factory.updateImportTypeNode(
             node,
-            ts.createLiteralTypeNode(ts.createStringLiteral(s)),
+            ts.createLiteralTypeNode(ts.createStringLiteral(s, true)),
             node.qualifier,
             node.typeArguments,
             node.isTypeOf,
