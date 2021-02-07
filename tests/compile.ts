@@ -3,10 +3,10 @@ import * as ts from 'typescript';
 import { sync as globSync } from 'glob';
 // eslint-disable-next-line import/no-named-default
 import { default as dtsPathTransform, Opts as PathTransformOpts } from '../dist/main.js';
+import * as path from 'path';
 
-const CJS_CONFIG: ts.CompilerOptions = {
+const CONFIG: ts.CompilerOptions = {
   experimentalDecorators: true,
-  jsx: ts.JsxEmit.React,
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.NodeJs,
   noEmitOnError: false,
@@ -14,21 +14,26 @@ const CJS_CONFIG: ts.CompilerOptions = {
   noUnusedParameters: true,
   stripInternal: true,
   declaration: true,
-  baseUrl: __dirname,
   target: ts.ScriptTarget.ESNext,
   newLine: ts.NewLineKind.LineFeed,
 };
 
 export default function compile(
-  input: string,
+  rootDir: string,
+  outDir: string,
   transformOpts: PathTransformOpts,
-  options: ts.CompilerOptions = CJS_CONFIG,
+  options: ts.CompilerOptions = CONFIG,
 ) {
-  const files = globSync(input);
+  // eslint-disable-next-line no-param-reassign
+  options = {
+    ...options,
+    rootDir,
+    outDir,
+  };
+
+  const files = globSync(path.join(rootDir, '**/*.ts'));
   const compilerHost = ts.createCompilerHost(options);
   const program = ts.createProgram(files, options, compilerHost);
-
-  const msgs = {};
 
   const emitResult = program.emit(undefined, undefined, undefined, undefined, {
     after: [dtsPathTransform(transformOpts) as ts.TransformerFactory<ts.SourceFile>],
@@ -40,7 +45,7 @@ export default function compile(
   allDiagnostics.forEach((diagnostic) => {
     const { file } = diagnostic;
     if (!file) {
-      throw new Error(`Unexpected null file of at diagnostic ${diagnostic}`);
+      return;
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const { line, character } = file.getLineAndCharacterOfPosition(diagnostic.start!);
@@ -48,6 +53,4 @@ export default function compile(
     // eslint-disable-next-line no-console
     console.log(`${file.fileName} (${line + 1},${character + 1}): ${message}`);
   });
-
-  return msgs;
 }

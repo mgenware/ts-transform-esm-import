@@ -9,8 +9,9 @@ import * as path from 'path';
 const indexJS = 'index.js';
 
 export interface Opts {
-  baseDir?: string;
-  nodeModulesDir?: string;
+  rootDir?: string;
+  outDir?: string;
+  resolvers?: string[];
 }
 
 function jsPath(s: string): string {
@@ -34,6 +35,22 @@ function relativePath(from: string, to: string): string {
 
 function isDynamicImport(node: ts.Node): node is ts.CallExpression {
   return ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword;
+}
+
+function changeSourceExtension(file: string): string {
+  if (path.extname(file) === '.ts') {
+    return `${file.substr(0, file.length - 3)}.js`;
+  }
+  return file;
+}
+
+function getSourceFilePathInOutDir(sf: ts.SourceFile, rootDir: string, outDir: string): string {
+  if (!sf.fileName) {
+    throw new Error(`Unexpected empty file name at ${sf}`);
+  }
+  const sourceFileAbs = path.resolve(changeSourceExtension(sf.fileName));
+  const sourceFileRelative = path.relative(rootDir, sourceFileAbs);
+  return path.join(outDir, sourceFileRelative);
 }
 
 function importExportVisitor(
@@ -70,86 +87,67 @@ function importExportVisitor(
       importPath = node.argument.literal.text;
     }
 
-    if (importPath) {
-      // Resolve option paths.
-      if (opts.baseDir) {
-        // eslint-disable-next-line no-param-reassign
-        opts.baseDir = path.resolve(opts.baseDir);
-      }
-      if (opts.nodeModulesDir) {
-        // eslint-disable-next-line no-param-reassign
-        opts.nodeModulesDir = path.resolve(opts.nodeModulesDir);
-      }
+    if (importPath && opts.rootDir && opts.outDir && opts.resolvers?.length) {
+      const rootDir = path.resolve(opts.rootDir);
+      const outDir = path.resolve(opts.outDir);
+      const resolvers = opts.resolvers.map((p) => path.resolve(p));
 
       let s = importPath;
 
-      // Rewrite absolute imports.
+      // Track if this import has been rewritten.
       let resolved = false;
+
+      // Rewrite absolute imports.
       if (s[0] !== '.') {
         // `importPath` is absolute.
-        const sourcePath = path.resolve(sf.fileName);
+
+        // `sf.fileName` is relative to project source dir, we need to map it
+        // to the output dir.
+        const sourcePath = getSourceFilePathInOutDir(sf, rootDir, outDir);
         const sourceDirPath = path.dirname(sourcePath);
 
-        if (opts.baseDir) {
-          const jsFile = jsPath(path.join(opts.baseDir, s));
+        for (const resolver of resolvers) {
+          const targetPath = path.join(resolver, s);
+          // Check if `${resolver}/${import}.js` exists.
+          let jsFile = jsPath(targetPath);
           if (fileExists(jsFile)) {
             s = relativePath(sourceDirPath, jsFile);
             resolved = true;
+            break;
           }
-        }
-        if (!resolved && opts.nodeModulesDir) {
-          const { nodeModulesDir } = opts;
 
-          // Check if path contains directories like `import 'foo/abc/def'`.
-          if (s.includes('/')) {
-            // Check if `foo/abc/def.js` exists.
-            let jsFile = jsPath(path.join(nodeModulesDir, s));
+          // Check if `${resolver}/${import}/index.js` exists.
+          jsFile = path.join(targetPath, indexJS);
+          if (fileExists(jsFile)) {
+            s = relativePath(sourceDirPath, jsFile);
+            resolved = true;
+            break;
+          }
+
+          // Check if `${resolver}/${import}/package.json` exists.
+          const packagePath = path.join(targetPath, 'package.json');
+          if (fileExists(packagePath)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const pkgInfo = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as any;
+            // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+            if (!pkgInfo) {
+              throw new Error(
+                `Unexpected empty package.json content in import "${s}", path "${packagePath}"`,
+              );
+            }
+            const pkgMain = (pkgInfo.exports ??
+              pkgInfo.module ??
+              pkgInfo.main ??
+              indexJS) as string;
+            jsFile = path.join(targetPath, pkgMain);
+
             if (fileExists(jsFile)) {
               s = relativePath(sourceDirPath, jsFile);
               resolved = true;
-            } else {
-              // Check if `foo/abc/def/index.js` exists.
-              jsFile = path.join(nodeModulesDir, s, indexJS);
-              if (fileExists(jsFile)) {
-                s = relativePath(sourceDirPath, jsFile);
-                resolved = true;
-              }
+              break;
             }
           }
-          if (!resolved) {
-            // Try locating `./node_modules/foo/package.json`.
-            const packagePath = path.join(nodeModulesDir, s, 'package.json');
-            if (fileExists(packagePath)) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const pkgInfo = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as any;
-              // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-              if (!pkgInfo) {
-                throw new Error(
-                  `Unexpected empty package.json content in import "${s}", path "${packagePath}"`,
-                );
-              }
-              const pkgMain = (pkgInfo.exports ??
-                pkgInfo.module ??
-                pkgInfo.main ??
-                indexJS) as string;
-              let jsFile = jsPath(path.join(nodeModulesDir, s, pkgMain));
-              if (fileExists(jsFile)) {
-                s = relativePath(sourceDirPath, jsFile);
-                resolved = true;
-              } else {
-                // Check if `module/index.js` exists.
-                jsFile = path.join(nodeModulesDir, s, indexJS);
-                if (fileExists(jsFile)) {
-                  s = relativePath(sourceDirPath, jsFile);
-                  resolved = true;
-                }
-              }
-            } else {
-              // Never throw errors on unrecognized absolute module names, cuz they
-              // might be node builtin modules.
-            }
-          }
-        } // end of checking `opts.nodeModulesDir`.
+        }
       } else {
         // `importPath` is relative.
         // Add js extension to relative paths.
@@ -157,7 +155,9 @@ function importExportVisitor(
         resolved = true;
       }
 
-      // Only rewrite relative path
+      // NOTE: Never throw errors on unrecognized absolute module names, cuz they
+      // might be node builtin modules.
+
       if (resolved) {
         if (ts.isImportDeclaration(node)) {
           return ctx.factory.updateImportDeclaration(
