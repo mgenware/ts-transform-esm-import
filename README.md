@@ -78,8 +78,43 @@ An example `package.json`
 }
 ```
 
-Options:
+### Options
 
-- `baseDir` source files root directory, used for `baseUrl` rewriting.
-- `nodeModulesDir` `node_modules` directory, used for `node_modules` rewriting.
+- `rootDir` source files root directory, should be the `rootDir` in `tsconfig.json`.
+- `outDir` output directory, should be the `outDir` in `tsconfig.json`.
+- `resolvers` a list of resolvers to resolve absolute import paths.
+  - `dir` search location for absolute import paths.
+  - `sourceDir`: `boolean` whether search location is in root dir.
 - `after`, `afterDeclarations`, `type` see [ttypescript](https://github.com/cevek/ttypescript).
+
+### Resolver examples
+
+To resolve paths in `node_modules`:
+
+```json
+{
+  "rootDir": "./src",
+  "outDir": "./dist/src",
+  "resolvers": [{ "dir": "./node_modules" }]
+}
+```
+
+To resolve something similar to TypeScript `baseUrl` (NOTE: `sourceDir` has to be true as resolver needs to travel inside source directory):
+
+```json
+{
+  "rootDir": "./src",
+  "outDir": "./dist/src",
+  "resolvers": [{ "dir": "./src", "sourceDir": true }]
+}
+```
+
+To resolve both, with `baseUrl` first:
+
+```json
+{
+  "rootDir": "./src",
+  "outDir": "./dist/src",
+  "resolvers": [{ "dir": "./src", "sourceDir": true }, { "dir": "./node_modules" }]
+}
+```
