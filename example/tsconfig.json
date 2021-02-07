@@ -14,8 +14,10 @@
         "after": true,
         "afterDeclarations": true,
         "type": "config",
-        "nodeModulesDir": "./node_modules",
-        "baseDir": "./dist"
+
+        "rootDir": "./src",
+        "outDir": "./dist/src",
+        "resolvers": [{ "dir": "./src", "sourceDir": true }, { "dir": "./node_modules" }]
       }
     ]
   }
