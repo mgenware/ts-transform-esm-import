@@ -7,6 +7,9 @@ module.exports = {
 
   // Runs tests (you need to build the project first).
   t: {
+    before: {
+      del: './tests/dist',
+    },
     run:
       'mocha --parallel --require source-map-support/register dist_tests/**/*.test.js --timeout 5000',
   },

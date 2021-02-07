@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-else-return */
 /**
  * Based on https://github.com/dropbox/ts-transform-import-path-rewrite
@@ -5,24 +6,45 @@
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
+import chalk from 'chalk';
 
-const indexJS = 'index.js';
+export interface Resolver {
+  dir: string;
+  sourceDir?: boolean;
+}
 
 export interface Opts {
   rootDir?: string;
   outDir?: string;
-  resolvers?: string[];
+  resolvers?: Resolver[];
+  debug?: boolean;
+}
+
+function pathWithExt(s: string, ext: string): string {
+  if (path.extname(s) === `.${ext}`) {
+    return s;
+  }
+  return `${s}.${ext}`;
 }
 
 function jsPath(s: string): string {
-  if (path.extname(s) === '.js') {
-    return s;
-  }
-  return `${s}.js`;
+  return pathWithExt(s, 'js');
+}
+
+function tsPath(s: string): string {
+  return pathWithExt(s, 'ts');
 }
 
 function fileExists(s: string): boolean {
   return fs.existsSync(s);
+}
+
+function pathMustExist(s: string): string {
+  if (!fileExists(s)) {
+    const msg = `The path "${s}" doesn't exist`;
+    console.error(chalk.yellow(msg));
+  }
+  return s;
 }
 
 function relativePath(from: string, to: string): string {
@@ -37,20 +59,35 @@ function isDynamicImport(node: ts.Node): node is ts.CallExpression {
   return ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword;
 }
 
-function changeSourceExtension(file: string): string {
+function changeTSToJS(file: string): string {
   if (path.extname(file) === '.ts') {
     return `${file.substr(0, file.length - 3)}.js`;
   }
   return file;
 }
 
-function getSourceFilePathInOutDir(sf: ts.SourceFile, rootDir: string, outDir: string): string {
+function getDestImportFromProjectTS(
+  currentDir: string,
+  targetFile: string,
+  rootDir: string,
+  outDir: string,
+): string {
+  const rel = relativePath(rootDir, changeTSToJS(targetFile));
+  const destAbs = path.join(outDir, rel);
+  return relativePath(currentDir, destAbs);
+}
+
+function getDestImportFromExternalJS(currentDir: string, targetFile: string): string {
+  return relativePath(currentDir, targetFile);
+}
+
+function getDestFile(sf: ts.SourceFile, rootDir: string, outDir: string): string {
   if (!sf.fileName) {
     throw new Error(`Unexpected empty file name at ${sf}`);
   }
-  const sourceFileAbs = path.resolve(changeSourceExtension(sf.fileName));
-  const sourceFileRelative = path.relative(rootDir, sourceFileAbs);
-  return path.join(outDir, sourceFileRelative);
+  const absPath = path.resolve(sf.fileName);
+  const relPath = relativePath(rootDir, absPath);
+  return path.join(outDir, relPath);
 }
 
 function importExportVisitor(
@@ -58,6 +95,8 @@ function importExportVisitor(
   sfOrBundle: ts.SourceFile | ts.Bundle,
   opts: Opts,
 ) {
+  // eslint-disable-next-line no-console
+  const log: (s: string) => void = opts.debug ? (s) => console.log(`🐤 ${s}`) : () => {};
   let sf: ts.SourceFile;
   if (ts.isSourceFile(sfOrBundle)) {
     sf = sfOrBundle;
@@ -88,62 +127,72 @@ function importExportVisitor(
     }
 
     if (importPath && opts.rootDir && opts.outDir && opts.resolvers?.length) {
-      const rootDir = path.resolve(opts.rootDir);
-      const outDir = path.resolve(opts.outDir);
-      const resolvers = opts.resolvers.map((p) => path.resolve(p));
-
-      let s = importPath;
+      log(`Rewriting path "${importPath}"`);
 
       // Track if this import has been rewritten.
       let resolved = false;
 
       // Rewrite absolute imports.
-      if (s[0] !== '.') {
+      if (importPath[0] !== '.') {
+        log(`Resolving absolute path "${importPath}"`);
         // `importPath` is absolute.
+        const { rootDir, outDir, resolvers } = opts;
+        const destFile = getDestFile(sf, rootDir, outDir);
+        const destDir = path.dirname(destFile);
 
-        // `sf.fileName` is relative to project source dir, we need to map it
-        // to the output dir.
-        const sourcePath = getSourceFilePathInOutDir(sf, rootDir, outDir);
-        const sourceDirPath = path.dirname(sourcePath);
+        for (const r of resolvers) {
+          const targetPath = path.join(r.dir, importPath);
+          const addExt = r.sourceDir ? tsPath : jsPath;
+          const getDestImport: (_: string) => string = r.sourceDir
+            ? (s) => getDestImportFromProjectTS(destDir, s, rootDir, outDir)
+            : (s) => getDestImportFromExternalJS(destDir, s);
+          const indexJS = `index.${r.sourceDir ? 'ts' : 'js'}`;
 
-        for (const resolver of resolvers) {
-          const targetPath = path.join(resolver, s);
-          // Check if `${resolver}/${import}.js` exists.
-          let jsFile = jsPath(targetPath);
-          if (fileExists(jsFile)) {
-            s = relativePath(sourceDirPath, jsFile);
+          // Check if `${resolver}/${import}.(js|ts)` exists.
+          let targetFile = addExt(path.join(r.dir, importPath));
+          log(`Checking if "${targetFile}" exists`);
+          if (fileExists(targetFile)) {
+            importPath = getDestImport(targetFile);
             resolved = true;
+            log(`Path resolved to "${importPath}"`);
             break;
           }
 
-          // Check if `${resolver}/${import}/index.js` exists.
-          jsFile = path.join(targetPath, indexJS);
-          if (fileExists(jsFile)) {
-            s = relativePath(sourceDirPath, jsFile);
+          // Check if `${resolver}/${import}/index.(js|ts)` exists.
+          targetFile = path.join(targetPath, indexJS);
+          log(`Checking if "${targetFile}" exists`);
+          if (fileExists(targetFile)) {
+            importPath = getDestImport(targetFile);
             resolved = true;
+            log(`Path resolved to "${importPath}"`);
             break;
           }
 
           // Check if `${resolver}/${import}/package.json` exists.
           const packagePath = path.join(targetPath, 'package.json');
-          if (fileExists(packagePath)) {
+          log(`Checking if package.json "${targetFile}" exists`);
+          if (fileExists(packagePath) && !r.sourceDir) {
+            log(`Found package.json "${packagePath}"`);
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const pkgInfo = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as any;
             // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
             if (!pkgInfo) {
               throw new Error(
-                `Unexpected empty package.json content in import "${s}", path "${packagePath}"`,
+                `Unexpected empty package.json content in import "${importPath}", path "${packagePath}"`,
               );
             }
             const pkgMain = (pkgInfo.exports ??
               pkgInfo.module ??
               pkgInfo.main ??
               indexJS) as string;
-            jsFile = path.join(targetPath, pkgMain);
 
-            if (fileExists(jsFile)) {
-              s = relativePath(sourceDirPath, jsFile);
+            targetFile = path.join(targetPath, pkgMain);
+            log(`Checking if main field "${targetFile}" exists`);
+            if (fileExists(targetFile)) {
+              importPath = getDestImport(targetFile);
               resolved = true;
+              log(`Path resolved to "${importPath}"`);
               break;
             }
           }
@@ -151,7 +200,9 @@ function importExportVisitor(
       } else {
         // `importPath` is relative.
         // Add js extension to relative paths.
-        s = jsPath(s);
+        const res = jsPath(importPath);
+        log(`Relative path "${importPath}" resolved to "${res}"`);
+        importPath = res;
         resolved = true;
       }
 
@@ -165,7 +216,7 @@ function importExportVisitor(
             node.decorators,
             node.modifiers,
             node.importClause,
-            ctx.factory.createStringLiteral(s, true),
+            ctx.factory.createStringLiteral(importPath, true),
           );
         } else if (ts.isExportDeclaration(node)) {
           return ctx.factory.updateExportDeclaration(
@@ -174,19 +225,19 @@ function importExportVisitor(
             node.modifiers,
             node.isTypeOnly,
             node.exportClause,
-            ctx.factory.createStringLiteral(s, true),
+            ctx.factory.createStringLiteral(importPath, true),
           );
         } else if (isDynamicImport(node)) {
           return ctx.factory.updateCallExpression(
             node,
             node.expression,
             node.typeArguments,
-            ctx.factory.createNodeArray([ctx.factory.createStringLiteral(s, true)]),
+            ctx.factory.createNodeArray([ctx.factory.createStringLiteral(importPath, true)]),
           );
         } else if (ts.isImportTypeNode(node)) {
           return ctx.factory.updateImportTypeNode(
             node,
-            ts.createLiteralTypeNode(ts.createStringLiteral(s, true)),
+            ts.createLiteralTypeNode(ts.createStringLiteral(importPath, true)),
             node.qualifier,
             node.typeArguments,
             node.isTypeOf,
@@ -202,10 +253,34 @@ function importExportVisitor(
 }
 
 export function transform(opts: Opts): ts.TransformerFactory<ts.SourceFile | ts.Bundle> {
-  // eslint-disable-next-line arrow-body-style
-  return (ctx: ts.TransformationContext): ts.Transformer<ts.SourceFile | ts.Bundle> => {
-    return (sf: ts.SourceFile | ts.Bundle) => ts.visitNode(sf, importExportVisitor(ctx, sf, opts));
-  };
+  if (!opts.rootDir) {
+    throw new Error('Missing required argument `rootDir`');
+  }
+  if (!opts.outDir) {
+    throw new Error('Missing required argument `outDir`');
+  }
+  opts.rootDir = pathMustExist(path.resolve(opts.rootDir));
+  opts.outDir = path.resolve(opts.outDir);
+  opts.resolvers ??= [];
+  for (const r of opts.resolvers) {
+    r.dir = pathMustExist(path.resolve(r.dir));
+  }
+  if (!opts.resolvers.length) {
+    console.warn(chalk.yellow('No resolvers defined'));
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(
+    chalk.cyan(
+      `🚄 ts-transform-esm-import arguments:\nrootDir: ${opts.rootDir}\noutDir: ${
+        opts.outDir
+      }\nresolvers: ${JSON.stringify(opts.resolvers)}`,
+    ),
+  );
+
+  return (ctx: ts.TransformationContext): ts.Transformer<ts.SourceFile | ts.Bundle> => (
+    sf: ts.SourceFile | ts.Bundle,
+  ) => ts.visitNode(sf, importExportVisitor(ctx, sf, opts));
 }
 
 export default transform;

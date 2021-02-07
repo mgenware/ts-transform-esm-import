@@ -1,9 +1,0 @@
-import 'fs';
-import 'node-a';
-import 'node-b/file';
-import './sub';
-import './sub.js';
-import 'foo';
-import '../foo';
-import 'sub/sub';
-import 'sub/sub.js';

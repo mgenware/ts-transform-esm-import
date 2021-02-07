@@ -1,142 +1,45 @@
 /* eslint-disable import/extensions */
-import { join } from 'path';
+import * as path from 'path';
 import * as assert from 'assert';
 import { promises as fsPromises } from 'fs';
-import compile from './compile.js';
+import compileInternal from './compile.js';
 import { Opts as PathTransformOpts } from '../dist/main.js';
 
-function fixture(s: string): string {
-  return join('./tests/fixture', s);
+const nodeModuelsDir = './tests/nodeModulesDir';
+
+function fixture(name: string): string {
+  return path.join(path.resolve('./tests/fixture'), name);
 }
 
-async function t(name: string, opt: PathTransformOpts, output: string, defsOutput: string) {
-  compile(fixture(`/${name}.ts`), opt);
-  const outFile = fixture(`${name}.js`);
-  const defsOutFile = fixture(`${name}.d.ts`);
-  assert.strictEqual(await fsPromises.readFile(outFile, 'utf8'), output);
-  assert.strictEqual(await fsPromises.readFile(defsOutFile, 'utf8'), defsOutput);
+async function readFile(file: string): Promise<string> {
+  return fsPromises.readFile(file, 'utf8');
 }
 
-it('Default mode (add extensions to relative imports)', async () => {
-  await t(
-    'doNothing',
-    {},
-    `import { dummy } from './bar';
-import './sub/sub.js';
-console.log(dummy);
-export function foo(fn) {
-    return import('node-a');
+async function verifyFile(name: string, file: string, code: string, dtsCode: string) {
+  const filePath = path.join(path.resolve('./tests/dist'), name, file);
+  assert.strictEqual(await readFile(`${filePath}.js`), code);
+  assert.strictEqual(await readFile(`${filePath}.d.ts`), dtsCode);
 }
-export { dummy2 } from './bar';
-export { lib1 } from 'node-b/subdir';
-export { lib2 } from 'node-b/subdir.js';
-import 'sub/sub';
-import 'sub/sub.js';
-`,
-    `import './sub/sub.js';
-export declare function foo(fn: any): Promise<any>;
-export { dummy2 } from './bar';
-export { lib1 } from 'node-b/subdir';
-export { lib2 } from 'node-b/subdir.js';
-import 'sub/sub';
-import 'sub/sub.js';
-`,
-  );
-});
 
-it('Resolve baseUrl', async () => {
-  await t(
-    'baseDir',
-    { baseDir: fixture('') },
-    `import { dummy } from './bar';
-import 'fs';
-import './sub/sub.js';
-console.log(dummy);
-export function foo(fn) {
-    return import('node-a');
+function compile(name: string, opts: PathTransformOpts) {
+  const rootDir = fixture(`${name}`);
+  const outDir = path.resolve(`./tests/dist/${name}`);
+  compileInternal(rootDir, outDir, {
+    ...opts,
+    rootDir,
+    outDir,
+  });
 }
-export { dummy2 } from './bar';
-export { lib1 } from 'node-b/file';
-export { lib2 } from 'node-b/file.js';
-import './sub/sub.js';
-import './sub/sub.js';
-`,
-    `import 'fs';
-import './sub/sub.js';
-export declare function foo(fn: any): Promise<any>;
-export { dummy2 } from './bar';
-export { lib1 } from 'node-b/file';
-export { lib2 } from 'node-b/file.js';
-import './sub/sub.js';
-import './sub/sub.js';
-`,
-  );
-});
 
-it('Resolve node modules', async () => {
-  await t(
-    'nodeModules',
-    {
-      nodeModulesDir: './tests/nodeModulesDir',
-    },
-    `import { dummy } from './bar';
-import 'fs';
-import './sub/sub.js';
-console.log(dummy);
-export function foo(fn) {
-    return import('../nodeModulesDir/node-a/foo/main.js');
-}
-export { dummy2 } from './bar';
-export { lib1 } from '../nodeModulesDir/node-b/file.js';
-export { lib2 } from '../nodeModulesDir/node-b/file.js';
-import 'sub/sub';
-import 'sub/sub.js';
-`,
-    `import 'fs';
-import './sub/sub.js';
-export declare function foo(fn: any): Promise<any>;
-export { dummy2 } from './bar';
-export { lib1 } from '../nodeModulesDir/node-b/file.js';
-export { lib2 } from '../nodeModulesDir/node-b/file.js';
-import 'sub/sub';
-import 'sub/sub.js';
-`,
-  );
-});
-
-it('Resolve baseUrl (subdir)', async () => {
-  await t(
-    'sub/baseDir',
-    { baseDir: fixture('') },
-    `import 'fs';
-import '../../nodeModulesDir/node-a/foo/main.js';
-import '../../nodeModulesDir/node-b/file.js';
-import './sub.js';
-import './sub.js';
-import 'foo';
-import '../foo.js';
-import 'sub/sub';
-import 'sub/sub.js';
-`,
-    `import 'fs';
-import 'node-a';
-import 'node-b/file';
-import './sub.js';
-import './sub.js';
-import '../foo.js';
-import '../foo.js';
-import './sub.js';
-import './sub.js';    
-`,
-  );
-});
-
-it('Resolve node modules (subdir)', async () => {
-  await t(
-    'sub/nodeModules',
-    {
-      nodeModulesDir: './tests/nodeModulesDir',
-    },
+it('Multiple resolvers', async () => {
+  const name = 'all';
+  compile(name, {
+    resolvers: [{ dir: fixture(name), sourceDir: true }, { dir: nodeModuelsDir }],
+    debug: true,
+  });
+  await verifyFile(
+    name,
+    'main',
     `import 'fs';
 import '../../nodeModulesDir/node-a/foo/main.js';
 import '../../nodeModulesDir/node-b/file.js';
@@ -156,6 +59,6 @@ import 'foo';
 import '../foo';
 import 'sub/sub';
 import 'sub/sub.js';
-`,
+  `,
   );
 });
