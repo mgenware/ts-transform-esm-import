@@ -1,9 +1,9 @@
 /* eslint-disable import/extensions */
 import * as ts from 'typescript';
 import { sync as globSync } from 'glob';
+import * as path from 'path';
 // eslint-disable-next-line import/no-named-default
 import { default as dtsPathTransform, Opts as PathTransformOpts } from '../dist/main.js';
-import * as path from 'path';
 
 const CONFIG: ts.CompilerOptions = {
   experimentalDecorators: true,
