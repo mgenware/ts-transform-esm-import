@@ -271,14 +271,16 @@ export function transform(opts: Opts): ts.TransformerFactory<ts.SourceFile | ts.
     console.warn(chalk.yellow('No resolvers defined'));
   }
 
-  // eslint-disable-next-line no-console
-  console.log(
-    chalk.cyan(
-      `🚄 ts-transform-esm-import arguments:\nrootDir: ${opts.rootDir}\noutDir: ${
-        opts.outDir
-      }\nresolvers: ${JSON.stringify(opts.resolvers)}`,
-    ),
-  );
+  if (opts.debug) {
+    // eslint-disable-next-line no-console
+    console.log(
+      chalk.cyan(
+        `🚄 ts-transform-esm-import arguments:\nrootDir: ${opts.rootDir}\noutDir: ${
+          opts.outDir
+        }\nresolvers: ${JSON.stringify(opts.resolvers)}`,
+      ),
+    );
+  }
 
   return (ctx: ts.TransformationContext): ts.Transformer<ts.SourceFile | ts.Bundle> => (
     sf: ts.SourceFile | ts.Bundle,
