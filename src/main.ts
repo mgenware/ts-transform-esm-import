@@ -210,6 +210,8 @@ function importExportVisitor(
       // might be node builtin modules.
 
       if (resolved) {
+        // Convert windows path to posix path.
+        importPath = importPath.replace(/\\/g, '/');
         if (ts.isImportDeclaration(node)) {
           return ctx.factory.updateImportDeclaration(
             node,
