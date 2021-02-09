@@ -6,3 +6,5 @@ export default function foo(name: string): string {
 }
 
 export * from 'lib/getHello';
+
+window.document.getElementById('root')!.textContent = foo('world');
