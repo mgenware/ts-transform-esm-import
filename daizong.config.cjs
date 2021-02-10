@@ -11,7 +11,7 @@ module.exports = {
       del: './tests/dist',
     },
     run:
-      'mocha --parallel --require source-map-support/register dist_tests/**/*.test.js --timeout 5000',
+      'mocha --parallel --require source-map-support/register dist_tests/**/*.test.js --timeout 10000',
   },
 
   // Cleans, lints, compiles sources and runs tests.
