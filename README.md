@@ -60,12 +60,14 @@ An example `package.json`
     "rootDir": "./src",
     "plugins": [
       {
-        "transform": "ts-transform-esm-import",
+        "transform": "../",
         "after": true,
         "afterDeclarations": true,
         "type": "config",
-        "nodeModulesDir": "./node_modules",
-        "baseDir": "./dist"
+
+        "rootDir": "./src",
+        "outDir": "./dist/src",
+        "resolvers": [{ "dir": "./src", "sourceDir": true }, { "dir": "./node_modules" }]
       }
     ]
   }
@@ -103,7 +105,7 @@ To resolve something similar to TypeScript `baseUrl` (NOTE: `sourceDir` has to b
 }
 ```
 
-To resolve both, with `baseUrl` first:
+To resolve both `baseUrl` and `node_modules` (with `baseUrl` first):
 
 ```json
 {
