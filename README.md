@@ -5,7 +5,7 @@
 
 Rewrite TypeScript import paths to ES Modules import paths. A fork of [ts-transform-import-path-rewrite](https://github.com/dropbox/ts-transform-import-path-rewrite).
 
-Without ts-transform-esm-import:
+Before:
 
 ```ts
 // Modules in `node_modules`.
@@ -21,7 +21,7 @@ import './rootFile';
 import './subDir/file';
 ```
 
-With ts-transform-esm-import, the code above compiles to ES modules friendly code:
+After:
 
 ```ts
 // Modules in `node_modules`.
