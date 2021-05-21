@@ -114,3 +114,9 @@ To resolve both `baseUrl` and `node_modules` (with `baseUrl` first):
   "resolvers": [{ "dir": "./src", "sourceDir": true }, { "dir": "./node_modules" }]
 }
 ```
+
+## FAQ
+
+### Import paths not rewritten
+
+Make sure your `module` field in `tsconfig.json` is not `commonjs`, `esnext` is recommended.
