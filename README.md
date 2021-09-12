@@ -45,7 +45,7 @@ See the [example project](https://github.com/mgenware/ts-transform-esm-import/tr
 - Create a `tsconfig.json` and use this transform as a plugin.
 - Build project using `ttsc` instead of `tsc`.
 
-An example `package.json`
+An example `tsconfig.json`
 
 ```json
 {
@@ -60,7 +60,7 @@ An example `package.json`
     "rootDir": "./src",
     "plugins": [
       {
-        "transform": "../",
+        "transform": "ts-transform-esm-import",
         "after": true,
         "afterDeclarations": true,
         "type": "config",
