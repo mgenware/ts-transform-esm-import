@@ -5,6 +5,8 @@
 
 Rewrite TypeScript import paths to ES Modules import paths. A fork of [ts-transform-import-path-rewrite](https://github.com/dropbox/ts-transform-import-path-rewrite).
 
+NOTE: Transforming modules with [subpath exports](https://nodejs.org/api/packages.html#packages_subpath_exports) is not supported at the moment ([#3](https://github.com/mgenware/ts-transform-esm-import/issues/3)).
+
 Before:
 
 ```ts
