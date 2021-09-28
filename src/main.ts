@@ -182,8 +182,8 @@ function importExportVisitor(
                 `Unexpected empty package.json content in import "${importPath}", path "${packagePath}"`,
               );
             }
-            const pkgMain = (pkgInfo.exports ??
-              pkgInfo.module ??
+            const pkgMain = (pkgInfo.module ??
+              pkgInfo.exports ??
               pkgInfo.main ??
               indexJS) as string;
 
