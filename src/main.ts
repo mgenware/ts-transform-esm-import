@@ -174,8 +174,8 @@ function importExportVisitor(
           if (fileExists(packagePath) && !r.sourceDir) {
             log(`Found package.json "${packagePath}"`);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const pkgInfo = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as any;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const pkgInfo = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
             // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
             if (!pkgInfo) {
               throw new Error(
@@ -282,9 +282,9 @@ export function transform(opts: Opts): ts.TransformerFactory<ts.SourceFile | ts.
     );
   }
 
-  return (ctx: ts.TransformationContext): ts.Transformer<ts.SourceFile | ts.Bundle> => (
-    sf: ts.SourceFile | ts.Bundle,
-  ) => ts.visitNode(sf, importExportVisitor(ctx, sf, opts));
+  return (ctx: ts.TransformationContext): ts.Transformer<ts.SourceFile | ts.Bundle> =>
+    (sf: ts.SourceFile | ts.Bundle) =>
+      ts.visitNode(sf, importExportVisitor(ctx, sf, opts));
 }
 
 export default transform;
