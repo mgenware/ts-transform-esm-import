@@ -1,6 +1,6 @@
 import * as cm from './common.js';
 
-it('CJS module field', async () => {
+it('CJS main', async () => {
   const name = 'cjsMain';
   cm.compile(name, {
     resolvers: [{ dir: cm.nodeModulesDir }],
