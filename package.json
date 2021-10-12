@@ -5,7 +5,7 @@
   "main": "./dist/main.js",
   "types": "./dist/main.d.ts",
   "scripts": {
-    "r": "daizong",
+    "r": "daizong --config=daizong.config.mjs",
     "test": "daizong build"
   },
   "repository": {

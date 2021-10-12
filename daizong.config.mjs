@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   // Starts development mode: watches and compiles all source files including tests.
   dev: {
     run: ['#clean', 'tsc -b tests -w'],
@@ -10,8 +10,7 @@ module.exports = {
     before: {
       del: './tests/dist',
     },
-    run:
-      'mocha --parallel --require source-map-support/register dist_tests/**/*.test.js --timeout 10000',
+    run: 'mocha --parallel --require source-map-support/register dist_tests/**/*.test.js --timeout 10000',
   },
 
   // Cleans, lints, compiles sources and runs tests.
