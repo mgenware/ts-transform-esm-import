@@ -1,42 +1,11 @@
-/* eslint-disable import/extensions */
-import * as path from 'path';
-import * as assert from 'assert';
-import { promises as fsPromises } from 'fs';
-import compileInternal from './compile.js';
-import { Opts as PathTransformOpts } from '../dist/main.js';
-
-const nodeModulesDir = './tests/nodeModulesDir';
-
-function fixture(name: string): string {
-  return path.join(path.resolve('./tests/fixture'), name);
-}
-
-async function readFile(file: string): Promise<string> {
-  return fsPromises.readFile(file, 'utf8');
-}
-
-async function verifyFile(name: string, file: string, code: string, dtsCode: string) {
-  const filePath = path.join(path.resolve('./tests/dist'), name, file);
-  assert.strictEqual(await readFile(`${filePath}.js`), code);
-  assert.strictEqual(await readFile(`${filePath}.d.ts`), dtsCode);
-}
-
-function compile(name: string, opts: PathTransformOpts) {
-  const rootDir = fixture(`${name}`);
-  const outDir = path.resolve(`./tests/dist/${name}`);
-  compileInternal(rootDir, outDir, {
-    ...opts,
-    rootDir,
-    outDir,
-  });
-}
+import * as cm from './common.js';
 
 it('Resolve baseDir', async () => {
   const name = 'baseDir';
-  compile(name, {
-    resolvers: [{ dir: fixture(name), sourceDir: true }],
+  cm.compile(name, {
+    resolvers: [{ dir: cm.fixture(name), sourceDir: true }],
   });
-  await verifyFile(
+  await cm.verifyFile(
     name,
     'main',
     `import { dummy } from './foo.js';
@@ -60,7 +29,7 @@ import './lib/lib.js';
 import './foo.js';
 `,
   );
-  await verifyFile(
+  await cm.verifyFile(
     name,
     'lib/lib',
     `import 'fs';
@@ -84,10 +53,10 @@ import './sub.js';
 
 it('Resolve node_modules', async () => {
   const name = 'nodeModules';
-  compile(name, {
-    resolvers: [{ dir: nodeModulesDir }],
+  cm.compile(name, {
+    resolvers: [{ dir: cm.nodeModulesDir }],
   });
-  await verifyFile(
+  await cm.verifyFile(
     name,
     'main',
     `import { dummy } from './foo.js';
@@ -111,7 +80,7 @@ import 'lib/lib';
 import 'foo';
 `,
   );
-  await verifyFile(
+  await cm.verifyFile(
     name,
     'lib/lib',
     `import 'fs';
@@ -135,10 +104,10 @@ import 'lib/sub';
 
 it('Multiple resolvers', async () => {
   const name = 'all';
-  compile(name, {
-    resolvers: [{ dir: fixture(name), sourceDir: true }, { dir: nodeModulesDir }],
+  cm.compile(name, {
+    resolvers: [{ dir: cm.fixture(name), sourceDir: true }, { dir: cm.nodeModulesDir }],
   });
-  await verifyFile(
+  await cm.verifyFile(
     name,
     'main',
     `import { dummy } from './foo.js';
@@ -162,7 +131,7 @@ import './lib/lib.js';
 import './foo.js';
 `,
   );
-  await verifyFile(
+  await cm.verifyFile(
     name,
     'lib/lib',
     `import 'fs';
@@ -180,36 +149,6 @@ import './sub.js';
 import '../foo.js';
 import '../foo.js';
 import './sub.js';
-`,
-  );
-});
-
-it('CJS module field', async () => {
-  const name = 'cjsModuleField';
-  compile(name, {
-    resolvers: [{ dir: nodeModulesDir }],
-  });
-  await verifyFile(
-    name,
-    'main',
-    `import '../../nodeModulesDir/cjsModuleField/dist/esm.js';
-`,
-    `import '../../nodeModulesDir/cjsModuleField/dist/esm.js';
-`,
-  );
-});
-
-it('package.json over index.js', async () => {
-  const name = 'pkgOverIndex';
-  compile(name, {
-    resolvers: [{ dir: nodeModulesDir }],
-  });
-  await verifyFile(
-    name,
-    'main',
-    `import '../../nodeModulesDir/pkgOverIndex/esm.js';
-`,
-    `import '../../nodeModulesDir/pkgOverIndex/esm.js';
 `,
   );
 });

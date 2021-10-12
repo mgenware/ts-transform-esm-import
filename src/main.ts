@@ -181,12 +181,22 @@ function importExportVisitor(
                 `Unexpected empty package.json content in import "${importPath}", path "${packagePath}"`,
               );
             }
-            const pkgMain = (pkgInfo.module ??
-              pkgInfo.exports ??
-              pkgInfo.main ??
-              indexJS) as string;
 
-            targetFile = path.join(targetPath, pkgMain);
+            let entryJS: string | undefined;
+            if (pkgInfo.type === 'module') {
+              if (typeof pkgInfo.exports === 'object') {
+                // TODO: https://github.com/mgenware/ts-transform-esm-import/issues/3
+                continue;
+              }
+              entryJS = pkgInfo.exports ?? pkgInfo.main;
+            } else {
+              entryJS = pkgInfo.module ?? pkgInfo.main;
+            }
+            if (!entryJS) {
+              continue;
+            }
+
+            targetFile = path.join(targetPath, entryJS);
             log(`Checking if main field "${targetFile}" exists`);
             if (fileExists(targetFile)) {
               importPath = getDestImport(targetFile);
