@@ -4,11 +4,11 @@ import './lib/lib';
 console.log(dummy);
 
 export function foo(fn) {
-  return import('node-a');
+  return import('exports');
 }
 
 export { dummy2 } from './foo';
-export { lib1 } from 'node-b/file';
+export { lib1 } from 'singleFile/file';
 
 import 'lib/lib';
 import { dummy } from 'foo';

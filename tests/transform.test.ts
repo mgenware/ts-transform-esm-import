@@ -44,10 +44,10 @@ import 'fs';
 import './lib/lib.js';
 console.log(dummy);
 export function foo(fn) {
-    return import('node-a');
+    return import('exports');
 }
 export { dummy2 } from './foo.js';
-export { lib1 } from 'node-b/file';
+export { lib1 } from 'singleFile/file';
 import './lib/lib.js';
 import './foo.js';
 `,
@@ -55,7 +55,7 @@ import './foo.js';
 import './lib/lib.js';
 export declare function foo(fn: any): Promise<any>;
 export { dummy2 } from './foo.js';
-export { lib1 } from 'node-b/file';
+export { lib1 } from 'singleFile/file';
 import './lib/lib.js';
 import './foo.js';
 `,
@@ -64,16 +64,16 @@ import './foo.js';
     name,
     'lib/lib',
     `import 'fs';
-import 'node-a';
-import 'node-b/file';
+import 'exports';
+import 'singleFile/file';
 import './sub.js';
 import '../foo.js';
 import '../foo.js';
 import './sub.js';
 `,
     `import 'fs';
-import 'node-a';
-import 'node-b/file';
+import 'exports';
+import 'singleFile/file';
 import './sub.js';
 import '../foo.js';
 import '../foo.js';
@@ -95,10 +95,10 @@ import 'fs';
 import './lib/lib.js';
 console.log(dummy);
 export function foo(fn) {
-    return import('../../nodeModulesDir/node-a/foo/main.js');
+    return import('../../nodeModulesDir/exports/foo/main.js');
 }
 export { dummy2 } from './foo.js';
-export { lib1 } from '../../nodeModulesDir/node-b/file.js';
+export { lib1 } from '../../nodeModulesDir/singleFile/file.js';
 import 'lib/lib';
 import 'foo';
 `,
@@ -106,7 +106,7 @@ import 'foo';
 import './lib/lib.js';
 export declare function foo(fn: any): Promise<any>;
 export { dummy2 } from './foo.js';
-export { lib1 } from '../../nodeModulesDir/node-b/file.js';
+export { lib1 } from '../../nodeModulesDir/singleFile/file.js';
 import 'lib/lib';
 import 'foo';
 `,
@@ -115,16 +115,16 @@ import 'foo';
     name,
     'lib/lib',
     `import 'fs';
-import '../../../nodeModulesDir/node-a/foo/main.js';
-import '../../../nodeModulesDir/node-b/file.js';
+import '../../../nodeModulesDir/exports/foo/main.js';
+import '../../../nodeModulesDir/singleFile/file.js';
 import './sub.js';
 import 'foo';
 import '../foo.js';
 import 'lib/sub';
 `,
     `import 'fs';
-import '../../../nodeModulesDir/node-a/foo/main.js';
-import '../../../nodeModulesDir/node-b/file.js';
+import '../../../nodeModulesDir/exports/foo/main.js';
+import '../../../nodeModulesDir/singleFile/file.js';
 import './sub.js';
 import 'foo';
 import '../foo.js';
@@ -146,10 +146,10 @@ import 'fs';
 import './lib/lib.js';
 console.log(dummy);
 export function foo(fn) {
-    return import('../../nodeModulesDir/node-a/foo/main.js');
+    return import('../../nodeModulesDir/exports/foo/main.js');
 }
 export { dummy2 } from './foo.js';
-export { lib1 } from '../../nodeModulesDir/node-b/file.js';
+export { lib1 } from '../../nodeModulesDir/singleFile/file.js';
 import './lib/lib.js';
 import './foo.js';
 `,
@@ -157,7 +157,7 @@ import './foo.js';
 import './lib/lib.js';
 export declare function foo(fn: any): Promise<any>;
 export { dummy2 } from './foo.js';
-export { lib1 } from '../../nodeModulesDir/node-b/file.js';
+export { lib1 } from '../../nodeModulesDir/singleFile/file.js';
 import './lib/lib.js';
 import './foo.js';
 `,
@@ -166,16 +166,16 @@ import './foo.js';
     name,
     'lib/lib',
     `import 'fs';
-import '../../../nodeModulesDir/node-a/foo/main.js';
-import '../../../nodeModulesDir/node-b/file.js';
+import '../../../nodeModulesDir/exports/foo/main.js';
+import '../../../nodeModulesDir/singleFile/file.js';
 import './sub.js';
 import '../foo.js';
 import '../foo.js';
 import './sub.js';
 `,
     `import 'fs';
-import '../../../nodeModulesDir/node-a/foo/main.js';
-import '../../../nodeModulesDir/node-b/file.js';
+import '../../../nodeModulesDir/exports/foo/main.js';
+import '../../../nodeModulesDir/singleFile/file.js';
 import './sub.js';
 import '../foo.js';
 import '../foo.js';

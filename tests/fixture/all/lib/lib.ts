@@ -1,6 +1,6 @@
 import 'fs';
-import 'node-a';
-import 'node-b/file';
+import 'exports';
+import 'singleFile/file';
 import './sub';
 import 'foo';
 import '../foo';
