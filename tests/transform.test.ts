@@ -198,3 +198,18 @@ it('CJS module field', async () => {
 `,
   );
 });
+
+it('package.json over index.js', async () => {
+  const name = 'pkgOverIndex';
+  compile(name, {
+    resolvers: [{ dir: nodeModulesDir }],
+  });
+  await verifyFile(
+    name,
+    'main',
+    `import '../../nodeModulesDir/pkgOverIndex/esm.js';
+`,
+    `import '../../nodeModulesDir/pkgOverIndex/esm.js';
+`,
+  );
+});

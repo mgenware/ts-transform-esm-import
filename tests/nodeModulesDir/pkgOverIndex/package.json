@@ -1,0 +1,4 @@
+{
+  "exports": "esm.js",
+  "main": "main.js"
+}

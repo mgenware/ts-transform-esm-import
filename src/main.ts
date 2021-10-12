@@ -8,6 +8,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
 
+export interface PackageJSON {
+  name: string;
+  version?: string;
+  main?: string;
+  exports?: string | Record<string, string>;
+  type?: string;
+  module?: string;
+}
+
 export interface Resolver {
   dir: string;
   sourceDir?: boolean;
@@ -158,16 +167,6 @@ function importExportVisitor(
             break;
           }
 
-          // Check if `${resolver}/${import}/index.(js|ts)` exists.
-          targetFile = path.join(targetPath, indexJS);
-          log(`Checking if "${targetFile}" exists`);
-          if (fileExists(targetFile)) {
-            importPath = getDestImport(targetFile);
-            resolved = true;
-            log(`Path resolved to "${importPath}"`);
-            break;
-          }
-
           // Check if `${resolver}/${import}/package.json` exists.
           const packagePath = path.join(targetPath, 'package.json');
           log(`Checking if package.json "${targetFile}" exists`);
@@ -175,7 +174,7 @@ function importExportVisitor(
             log(`Found package.json "${packagePath}"`);
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const pkgInfo = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+            const pkgInfo = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as PackageJSON;
             // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
             if (!pkgInfo) {
               throw new Error(
@@ -196,7 +195,17 @@ function importExportVisitor(
               break;
             }
           }
-        }
+
+          // Check if `${resolver}/${import}/index.(js|ts)` exists.
+          targetFile = path.join(targetPath, indexJS);
+          log(`Checking if "${targetFile}" exists`);
+          if (fileExists(targetFile)) {
+            importPath = getDestImport(targetFile);
+            resolved = true;
+            log(`Path resolved to "${importPath}"`);
+            break;
+          }
+        } // end of `for (const r of resolvers)`.
       } else {
         // `importPath` is relative.
         // Add js extension to relative paths.
