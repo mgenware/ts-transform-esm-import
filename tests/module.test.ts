@@ -38,9 +38,9 @@ it('CJS module field', async () => {
   await cm.verifyFile(
     name,
     'main',
-    `import '../../nodeModulesDir/cjsModuleField/dist/esm.js';
+    `import '../../nodeModulesDir/cjsModuleField/d/esm.js';
 `,
-    `import '../../nodeModulesDir/cjsModuleField/dist/esm.js';
+    `import '../../nodeModulesDir/cjsModuleField/d/esm.js';
 `,
   );
 });
@@ -53,9 +53,9 @@ it('ESM exports field', async () => {
   await cm.verifyFile(
     name,
     'main',
-    `import '../../nodeModulesDir/esmExportsField/dist/esm.js';
+    `import '../../nodeModulesDir/esmExportsField/d/esm.js';
 `,
-    `import '../../nodeModulesDir/esmExportsField/dist/esm.js';
+    `import '../../nodeModulesDir/esmExportsField/d/esm.js';
 `,
   );
 });

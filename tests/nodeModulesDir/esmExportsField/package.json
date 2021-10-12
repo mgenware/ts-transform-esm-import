@@ -1,5 +1,5 @@
 {
   "type": "module",
-  "main": "dist/main.js",
-  "exports": "dist/esm.js"
+  "main": "d/main.js",
+  "exports": "d/esm.js"
 }
