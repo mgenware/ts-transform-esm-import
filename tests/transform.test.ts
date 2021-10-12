@@ -5,7 +5,7 @@ import { promises as fsPromises } from 'fs';
 import compileInternal from './compile.js';
 import { Opts as PathTransformOpts } from '../dist/main.js';
 
-const nodeModuelsDir = './tests/nodeModulesDir';
+const nodeModulesDir = './tests/nodeModulesDir';
 
 function fixture(name: string): string {
   return path.join(path.resolve('./tests/fixture'), name);
@@ -85,7 +85,7 @@ import './sub.js';
 it('Resolve node_modules', async () => {
   const name = 'nodeModules';
   compile(name, {
-    resolvers: [{ dir: nodeModuelsDir }],
+    resolvers: [{ dir: nodeModulesDir }],
   });
   await verifyFile(
     name,
@@ -136,7 +136,7 @@ import 'lib/sub';
 it('Multiple resolvers', async () => {
   const name = 'all';
   compile(name, {
-    resolvers: [{ dir: fixture(name), sourceDir: true }, { dir: nodeModuelsDir }],
+    resolvers: [{ dir: fixture(name), sourceDir: true }, { dir: nodeModulesDir }],
   });
   await verifyFile(
     name,
@@ -180,6 +180,21 @@ import './sub.js';
 import '../foo.js';
 import '../foo.js';
 import './sub.js';
+`,
+  );
+});
+
+it('CJS module field', async () => {
+  const name = 'cjsModuleField';
+  compile(name, {
+    resolvers: [{ dir: nodeModulesDir }],
+  });
+  await verifyFile(
+    name,
+    'main',
+    `import '../../nodeModulesDir/cjsModuleField/dist/esm.js';
+`,
+    `import '../../nodeModulesDir/cjsModuleField/dist/esm.js';
 `,
   );
 });

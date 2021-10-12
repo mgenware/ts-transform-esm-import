@@ -1,0 +1,4 @@
+{
+  "main": "dist/main.js",
+  "module": "dist/esm.js"
+}
