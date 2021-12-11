@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/mgenware/ts-transform-esm-import/workflows/Build/badge.svg)](https://github.com/mgenware/ts-transform-esm-import/actions)
 [![npm version](https://img.shields.io/npm/v/ts-transform-esm-import.svg?style=flat-square)](https://npmjs.com/package/ts-transform-esm-import)
 
-Rewrite TypeScript import paths to ES Modules import paths. A fork of [ts-transform-import-path-rewrite](https://github.com/dropbox/ts-transform-import-path-rewrite).
+Rewrite TypeScript import paths to ES Modules import paths. A fork of [ts-transform-import-path-rewrite](https://github.com/dropbox/ts-transform-import-path-rewrite). **TypeScript 4.5+**.
 
 NOTE: Transforming modules with [subpath exports](https://nodejs.org/api/packages.html#packages_subpath_exports) is not supported at the moment ([#3](https://github.com/mgenware/ts-transform-esm-import/issues/3)).
 
