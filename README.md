@@ -41,11 +41,10 @@ import './subDir/file.js';
 
 ## Usage
 
-See the [example project](https://github.com/mgenware/ts-transform-esm-import/tree/main/example).
+> See [example](https://github.com/mgenware/ts-transform-esm-import/tree/main/example) for a runnable project.
 
-- Install `typescript` and [ttypescript](https://github.com/cevek/ttypescript) for custom transformations.
-- Create a `tsconfig.json` and use this transform as a plugin.
-- Build project using `ttsc` instead of `tsc`.
+- Install [ts-patch](https://github.com/nonara/ts-patch) and follow its instructions.
+- Use this project as a plugin of ts-patch.
 
 An example `tsconfig.json`
 
@@ -83,7 +82,7 @@ An example `tsconfig.json`
 - `resolvers` a list of resolvers to resolve absolute import paths.
   - `dir` search location for absolute import paths.
   - `sourceDir`: `boolean` whether search location is in root dir.
-- `after`, `afterDeclarations`, `type` see [ttypescript](https://github.com/cevek/ttypescript).
+- `after`, `afterDeclarations`, `type` see [ts-patch Options](https://github.com/nonara/ts-patch).
 
 ### Resolver examples
 
