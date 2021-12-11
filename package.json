@@ -54,8 +54,5 @@
   },
   "peerDependencies": {
     "typescript": "^4.5.3"
-  },
-  "dependencies": {
-    "chalk": "^5.0.0"
   }
 }

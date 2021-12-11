@@ -6,7 +6,6 @@
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
-import chalk from 'chalk';
 
 export interface PackageJSON {
   name: string;
@@ -51,7 +50,7 @@ function fileExists(s: string): boolean {
 function pathMustExist(s: string): string {
   if (!fileExists(s)) {
     const msg = `The path "${s}" doesn't exist`;
-    console.error(chalk.yellow(msg));
+    console.error(`ERROR: ${msg}`);
   }
   return s;
 }
@@ -238,6 +237,7 @@ function importExportVisitor(
             node.modifiers,
             node.importClause,
             ctx.factory.createStringLiteral(importPath, true),
+            node.assertClause,
           );
         } else if (ts.isExportDeclaration(node)) {
           return ctx.factory.updateExportDeclaration(
@@ -247,6 +247,7 @@ function importExportVisitor(
             node.isTypeOnly,
             node.exportClause,
             ctx.factory.createStringLiteral(importPath, true),
+            node.assertClause,
           );
         } else if (isDynamicImport(node)) {
           return ctx.factory.updateCallExpression(
@@ -287,17 +288,15 @@ export function transform(opts: Opts): ts.TransformerFactory<ts.SourceFile | ts.
     r.dir = pathMustExist(path.resolve(r.dir));
   }
   if (!opts.resolvers.length) {
-    console.warn(chalk.yellow('No resolvers defined'));
+    console.warn('WARNING: No resolvers defined');
   }
 
   if (opts.debug) {
     // eslint-disable-next-line no-console
     console.log(
-      chalk.cyan(
-        `🚄 ts-transform-esm-import arguments:\nrootDir: ${opts.rootDir}\noutDir: ${
-          opts.outDir
-        }\nresolvers: ${JSON.stringify(opts.resolvers)}`,
-      ),
+      `🚄 ts-transform-esm-import arguments:\nrootDir: ${opts.rootDir}\noutDir: ${
+        opts.outDir
+      }\nresolvers: ${JSON.stringify(opts.resolvers)}`,
     );
   }
 
