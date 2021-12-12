@@ -140,6 +140,12 @@ function importExportVisitor(
       // Track if this import has been rewritten.
       let resolved = false;
 
+      if (importPath[0] === '/' || importPath[0] === '\\') {
+        throw new Error(
+          `Please don't use absolute file-system paths. They may only work on your local machine.`,
+        );
+      }
+
       // Rewrite absolute imports.
       if (importPath[0] !== '.') {
         log(`Resolving absolute path "${importPath}"`);
