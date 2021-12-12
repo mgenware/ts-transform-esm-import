@@ -1,5 +1,5 @@
-import * as helper from './helper';
 import * as path from 'path';
+import * as helper from './helper';
 import Logger from './logger';
 import { PackageJSON } from './def';
 
@@ -55,6 +55,7 @@ export function resolveESM(
   logger?.log(`${importPath} has sub-paths: ${hasSubImportPath}`);
   const exports = pkg.exports ?? pkg.main;
   logger?.log(`Got \`exports\`: ${JSON.stringify(exports)}`);
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (!exports) {
     throw new Error(
       `Fatal error: the package "${pkgPath}" is ESM but doesn't have a valid entrypoint`,
@@ -67,6 +68,7 @@ export function resolveESM(
       );
     }
     return path.join(moduleDir, exports);
+    // eslint-disable-next-line no-else-return
   } else if (typeof exports === 'object') {
     const userSubPath = formatSubPath(
       hasSubImportPath ? importPath.substring(importPath.indexOf('/') + 1) : '.',

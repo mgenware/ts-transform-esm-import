@@ -59,7 +59,7 @@ function importExportVisitor(
 
       if (importPath[0] === '/' || importPath[0] === '\\') {
         throw new Error(
-          `Please don't use absolute file-system paths. They may only work on your local machine.`,
+          "Please don't use absolute file-system paths. They may only work on your local machine.",
         );
       }
 
@@ -74,6 +74,7 @@ function importExportVisitor(
         const destDir = path.dirname(destFile);
 
         for (const resolver of resolvers) {
+          // eslint-disable-next-line @typescript-eslint/no-loop-func
           const resolveAsCommonJSFunc = () =>
             (resolvedFile = rsv.resolveRegularCJMFile(
               resolver.dir,
