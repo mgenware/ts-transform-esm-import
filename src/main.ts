@@ -156,7 +156,7 @@ function importExportVisitor(
             : (s) => getDestImportFromExternalJS(destDir, s);
           const indexJS = `index.${r.sourceDir ? 'ts' : 'js'}`;
 
-          // Check if `${resolver}/${import}.(js|ts)` exists.
+          // Check if `${resolver.dir}/${import}.(js|ts)` exists.
           let targetFile = addExt(path.join(r.dir, importPath));
           log(`Checking if "${targetFile}" exists`);
           if (fileExists(targetFile)) {
@@ -166,30 +166,35 @@ function importExportVisitor(
             break;
           }
 
-          // Check if `${resolver}/${import}/package.json` exists.
+          // Check if `${resolver.dir}/${import}/package.json` exists.
           const packagePath = path.join(targetPath, 'package.json');
           log(`Checking if package.json "${targetFile}" exists`);
           if (fileExists(packagePath) && !r.sourceDir) {
             log(`Found package.json "${packagePath}"`);
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const pkgInfo = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as PackageJSON;
+            const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as PackageJSON;
             // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-            if (!pkgInfo) {
+            if (typeof pkg !== 'object') {
               throw new Error(
-                `Unexpected empty package.json content in import "${importPath}", path "${packagePath}"`,
+                `package.json at "${importPath}" is not valid, path "${packagePath}", got "${JSON.stringify(
+                  pkg,
+                )}"`,
               );
             }
 
             let entryJS: string | undefined;
-            if (pkgInfo.type === 'module') {
-              if (typeof pkgInfo.exports === 'object') {
-                // TODO: https://github.com/mgenware/ts-transform-esm-import/issues/3
+            if (pkg.type === 'module') {
+              const { exports } = pkg;
+              if (typeof exports === 'object') {
+                // https://nodejs.org/api/packages.html#package-entry-points
                 continue;
+              } else {
+                entryJS = exports ?? pkg.main;
               }
-              entryJS = pkgInfo.exports ?? pkgInfo.main;
             } else {
-              entryJS = pkgInfo.module ?? pkgInfo.main;
+              // Some commmonjs modules support a ESM entry via `module` field.
+              entryJS = pkg.module ?? pkg.main;
             }
             if (!entryJS) {
               continue;
