@@ -11,10 +11,17 @@ import * as rsv from './resolve';
 import * as def from './def';
 import Logger from './logger';
 
+export interface Opts {
+  rootDir?: string;
+  outDir?: string;
+  resolvers?: def.Resolver[];
+  debug?: boolean;
+}
+
 function importExportVisitor(
   ctx: ts.TransformationContext,
   sfOrBundle: ts.SourceFile | ts.Bundle,
-  opts: def.Opts,
+  opts: Opts,
 ) {
   const logger = opts.debug ? new Logger() : null;
   const log: (s: string) => void = opts.debug ? (s) => logger?.log(s) : () => {};
@@ -67,11 +74,8 @@ function importExportVisitor(
         const destDir = path.dirname(destFile);
 
         for (const resolver of resolvers) {
-          // Whether import path has sub-paths i.e. `module/a/c`.
-          const importPathHasSubPaths = importPath.includes('/');
-
           const resolveAsCommonJSFunc = () =>
-            (resolvedFile = rsv.resolveCommonJSFile(
+            (resolvedFile = rsv.resolveRegularCJMFile(
               resolver.dir,
               importPath,
               !!resolver.sourceDir,
@@ -89,7 +93,8 @@ function importExportVisitor(
 
             // First extract the module name and check if it's an ESM.
             const moduleName = helper.getModuleNameFromImport(importPath);
-            const packagePath = path.join(resolver.dir, moduleName, 'package.json');
+            const modulePath = path.join(resolver.dir, moduleName);
+            const packagePath = path.join(modulePath, 'package.json');
             if (helper.fileExists(packagePath)) {
               log(`"${packagePath}" exists`);
               // Found the npm module of the import path.
@@ -108,18 +113,24 @@ function importExportVisitor(
               log(`"${packagePath}" is ESM? ${isESM}`);
               if (isESM) {
                 // ESM. Resolve using ESM logic.
-                resolvedFile = rsv.resolveESM(resolver.dir, importPath, packagePath, pkg);
+                resolvedFile = rsv.resolveESM(
+                  resolver.dir,
+                  importPath,
+                  modulePath,
+                  packagePath,
+                  pkg,
+                  logger,
+                );
               } else {
-                // Not an ESM.
-
-                // Some CommonJS modules have a `module` field pointing to ESM entry file.
-                // If this import path doesn't have sub-paths, try using the ESM entry first.
-                if (pkg.module && !importPathHasSubPaths) {
-                  resolvedFile = pkg.module;
-                } else {
-                  // Resolve as a CommonJS import.
-                  resolveAsCommonJSFunc();
-                }
+                // Not an ESM, resolving as a CommonJS module (CJM).
+                resolvedFile = rsv.resolveCJM(
+                  resolver.dir,
+                  importPath,
+                  modulePath,
+                  packagePath,
+                  pkg,
+                  logger,
+                );
               }
             } else {
               log(`"${packagePath}" doesn't exist`);
@@ -129,12 +140,15 @@ function importExportVisitor(
             }
           }
 
+          log(`Resolver done with result: "${resolvedFile}"`);
           if (resolvedFile) {
             const getDestImport: (_: string) => string = resolver.sourceDir
               ? (s) => helper.getDestImportFromProjectTS(destDir, s, rootDir, outDir)
               : (s) => helper.getDestImportFromExternalJS(destDir, s);
             // Update import path if it's resolved.
-            importPath = getDestImport(resolvedFile);
+            const newImportPath = getDestImport(resolvedFile);
+            log(`✅ Updated import from "${importPath}" to "${newImportPath}"`);
+            importPath = newImportPath;
           } else {
             continue;
           }
@@ -144,6 +158,8 @@ function importExportVisitor(
         // Add js extension to relative paths.
         resolvedFile = helper.jsPath(importPath);
         log(`Relative path "${importPath}" resolved to "${resolvedFile}"`);
+        log(`✅ Updated import from "${importPath}" to "${resolvedFile}"`);
+        importPath = resolvedFile;
       }
 
       // NOTE: Never throw errors on unrecognized absolute module names, cuz they
@@ -196,7 +212,7 @@ function importExportVisitor(
   return visitor;
 }
 
-export function transform(opts: def.Opts): ts.TransformerFactory<ts.SourceFile | ts.Bundle> {
+export function transform(opts: Opts): ts.TransformerFactory<ts.SourceFile | ts.Bundle> {
   if (!opts.rootDir) {
     throw new Error('Missing required argument `rootDir`');
   }

@@ -2,8 +2,7 @@
 import * as ts from 'typescript';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
-import dtsPathTransform from '../dist/main.js';
-import { Opts as PathTransformOpts } from '../dist/def.js';
+import dtsPathTransform, { Opts as PathTransformOpts } from '../dist/main.js';
 
 const CONFIG: ts.CompilerOptions = {
   experimentalDecorators: true,

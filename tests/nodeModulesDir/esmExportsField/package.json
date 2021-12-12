@@ -1,5 +1,5 @@
 {
   "type": "module",
   "main": "d/main.js",
-  "exports": "d/esm.js"
+  "exports": "./d/esm.js"
 }

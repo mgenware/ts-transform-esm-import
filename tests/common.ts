@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as assert from 'assert';
 import { promises as fsPromises } from 'fs';
 import compileInternal from './compile.js';
-import { Opts as PathTransformOpts } from '../dist/def.js';
+import { Opts as PathTransformOpts } from '../dist/main.js';
 
 export const nodeModulesDir = './tests/nodeModulesDir';
 
