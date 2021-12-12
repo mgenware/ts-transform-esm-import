@@ -149,8 +149,7 @@ function importExportVisitor(
             const newImportPath = getDestImport(resolvedFile);
             log(`✅ Updated import from "${importPath}" to "${newImportPath}"`);
             importPath = newImportPath;
-          } else {
-            continue;
+            break;
           }
         } // end of `for (const r of resolvers)`.
       } else {
