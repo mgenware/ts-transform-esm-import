@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "main": "d/main.js",
+  "exports": {
+    ".": "./d/main.js",
+    "./lib": "./d/lib.js",
+    "./sub": "./d/sub/sub.js",
+    "./sub.js": "./d/sub/sub.js"
+  }
+}

@@ -59,3 +59,22 @@ it('ESM exports field', async () => {
 `,
   );
 });
+
+it('ESM subpath exports', async () => {
+  const name = 'esmMultipleExports';
+  cm.compile(name, {
+    resolvers: [{ dir: cm.nodeModulesDir }],
+  });
+  await cm.verifyFile(
+    name,
+    'main',
+    `import '../../nodeModulesDir/esmMultipleExports/d/lib.js';
+import '../../nodeModulesDir/esmMultipleExports/d/sub/sub.js';
+import '../../nodeModulesDir/esmMultipleExports/d/sub/sub.js';
+`,
+    `import '../../nodeModulesDir/esmMultipleExports/d/lib.js';
+import '../../nodeModulesDir/esmMultipleExports/d/sub/sub.js';
+import '../../nodeModulesDir/esmMultipleExports/d/sub/sub.js';
+`,
+  );
+});
