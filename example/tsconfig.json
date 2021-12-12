@@ -10,7 +10,7 @@
     "rootDir": "./src",
     "plugins": [
       {
-        "transform": "../",
+        "transform": "ts-transform-esm-import",
         "after": true,
         "afterDeclarations": true,
         "type": "config",
