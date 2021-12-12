@@ -41,7 +41,7 @@
     "@types/node": "^16.11.12",
     "@typescript-eslint/eslint-plugin": "^5.6.0",
     "@typescript-eslint/parser": "^5.6.0",
-    "daizong": "^0.21.0",
+    "daizong": "^0.22.0",
     "eslint": "^8.4.1",
     "eslint-config-mgenware": "^0.5.1",
     "eslint-module-utils": "^2.7.1",

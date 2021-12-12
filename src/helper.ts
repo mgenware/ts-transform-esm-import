@@ -71,3 +71,8 @@ export function getDestFile(sf: ts.SourceFile, rootDir: string, outDir: string):
   const relPath = relativePath(rootDir, absPath);
   return path.join(outDir, relPath);
 }
+
+export function getModuleNameFromImport(importPath: string): string {
+  const idx = importPath.indexOf('/');
+  return idx >= 0 ? importPath.substring(0, idx) : importPath;
+}

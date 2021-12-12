@@ -7,35 +7,17 @@ import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as helper from './helper';
-
-export interface PackageJSON {
-  name: string;
-  version?: string;
-  main?: string;
-  exports?: string | Record<string, string>;
-  type?: string;
-  module?: string;
-}
-
-export interface Resolver {
-  dir: string;
-  sourceDir?: boolean;
-}
-
-export interface Opts {
-  rootDir?: string;
-  outDir?: string;
-  resolvers?: Resolver[];
-  debug?: boolean;
-}
+import * as rsv from './resolve';
+import * as def from './def';
+import Logger from './logger';
 
 function importExportVisitor(
   ctx: ts.TransformationContext,
   sfOrBundle: ts.SourceFile | ts.Bundle,
-  opts: Opts,
+  opts: def.Opts,
 ) {
-  // eslint-disable-next-line no-console
-  const log: (s: string) => void = opts.debug ? (s) => console.log(`🐤 ${s}`) : () => {};
+  const logger = opts.debug ? new Logger() : null;
+  const log: (s: string) => void = opts.debug ? (s) => logger?.log(s) : () => {};
   let sf: ts.SourceFile;
   if (ts.isSourceFile(sfOrBundle)) {
     sf = sfOrBundle;
@@ -68,108 +50,106 @@ function importExportVisitor(
     if (importPath && opts.rootDir && opts.outDir && opts.resolvers?.length) {
       log(`Rewriting path "${importPath}"`);
 
-      // Track if this import has been rewritten.
-      let resolved = false;
-
       if (importPath[0] === '/' || importPath[0] === '\\') {
         throw new Error(
           `Please don't use absolute file-system paths. They may only work on your local machine.`,
         );
       }
 
-      // Rewrite absolute imports.
+      // Resolve file path from current import path.
+      let resolvedFile: string | null = null;
       if (importPath[0] !== '.') {
-        log(`Resolving absolute path "${importPath}"`);
-        // `importPath` is absolute.
+        // Rewrite bare specifiers.
+        log(`Resolving bare specifiers "${importPath}"`);
+
         const { rootDir, outDir, resolvers } = opts;
         const destFile = helper.getDestFile(sf, rootDir, outDir);
         const destDir = path.dirname(destFile);
 
-        for (const r of resolvers) {
-          const targetPath = path.join(r.dir, importPath);
-          const addExt = r.sourceDir ? helper.tsPath : helper.jsPath;
-          const getDestImport: (_: string) => string = r.sourceDir
-            ? (s) => helper.getDestImportFromProjectTS(destDir, s, rootDir, outDir)
-            : (s) => helper.getDestImportFromExternalJS(destDir, s);
-          const indexJS = `index.${r.sourceDir ? 'ts' : 'js'}`;
+        for (const resolver of resolvers) {
+          // Whether import path has sub-paths i.e. `module/a/c`.
+          const importPathHasSubPaths = importPath.includes('/');
 
-          // Check if `${resolver.dir}/${import}.(js|ts)` exists.
-          let targetFile = addExt(path.join(r.dir, importPath));
-          log(`Checking if "${targetFile}" exists`);
-          if (helper.fileExists(targetFile)) {
-            importPath = getDestImport(targetFile);
-            resolved = true;
-            log(`Path resolved to "${importPath}"`);
-            break;
-          }
+          const resolveAsCommonJSFunc = () =>
+            (resolvedFile = rsv.resolveCommonJSFile(
+              resolver.dir,
+              importPath,
+              !!resolver.sourceDir,
+              logger,
+            ));
+          if (resolver.sourceDir) {
+            log('`sourceDir` is true');
+            // If resolver is in source directory (`resolver.sourceDir` is true).
+            // resolve the import path as a normal CommonJS import.
+            resolveAsCommonJSFunc();
+          } else {
+            log('`sourceDir` is false');
+            // Resolver is in `node_modules`, import resolving depends on if the module
+            // is an ESM or not.
 
-          // Check if `${resolver.dir}/${import}/package.json` exists.
-          const packagePath = path.join(targetPath, 'package.json');
-          log(`Checking if package.json "${targetFile}" exists`);
-          if (helper.fileExists(packagePath) && !r.sourceDir) {
-            log(`Found package.json "${packagePath}"`);
+            // First extract the module name and check if it's an ESM.
+            const moduleName = helper.getModuleNameFromImport(importPath);
+            const packagePath = path.join(resolver.dir, moduleName, 'package.json');
+            if (helper.fileExists(packagePath)) {
+              log(`"${packagePath}" exists`);
+              // Found the npm module of the import path.
 
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as PackageJSON;
-            // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-            if (typeof pkg !== 'object') {
-              throw new Error(
-                `package.json at "${importPath}" is not valid, path "${packagePath}", got "${JSON.stringify(
-                  pkg,
-                )}"`,
-              );
-            }
+              // Get the contents of `package.json`.
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as def.PackageJSON;
+              // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+              if (typeof pkg !== 'object') {
+                throw new Error(
+                  `Fatal error: package.json at "${packagePath}" is not a valid object`,
+                );
+              }
 
-            let entryJS: string | undefined;
-            if (pkg.type === 'module') {
-              const { exports } = pkg;
-              if (typeof exports === 'object') {
-                // https://nodejs.org/api/packages.html#package-entry-points
-                continue;
+              const isESM = pkg.type === 'module';
+              log(`"${packagePath}" is ESM? ${isESM}`);
+              if (isESM) {
+                // ESM. Resolve using ESM logic.
+                resolvedFile = rsv.resolveESM(resolver.dir, importPath, packagePath, pkg);
               } else {
-                entryJS = exports ?? pkg.main;
+                // Not an ESM.
+
+                // Some CommonJS modules have a `module` field pointing to ESM entry file.
+                // If this import path doesn't have sub-paths, try using the ESM entry first.
+                if (pkg.module && !importPathHasSubPaths) {
+                  resolvedFile = pkg.module;
+                } else {
+                  // Resolve as a CommonJS import.
+                  resolveAsCommonJSFunc();
+                }
               }
             } else {
-              // Some commmonjs modules support a ESM entry via `module` field.
-              entryJS = pkg.module ?? pkg.main;
-            }
-            if (!entryJS) {
-              continue;
-            }
-
-            targetFile = path.join(targetPath, entryJS);
-            log(`Checking if main field "${targetFile}" exists`);
-            if (helper.fileExists(targetFile)) {
-              importPath = getDestImport(targetFile);
-              resolved = true;
-              log(`Path resolved to "${importPath}"`);
-              break;
+              log(`"${packagePath}" doesn't exist`);
+              // Oh no, no npm module found in the import path.
+              // Resolve it as a CommonJS import.
+              resolveAsCommonJSFunc();
             }
           }
 
-          // Check if `${resolver}/${import}/index.(js|ts)` exists.
-          targetFile = path.join(targetPath, indexJS);
-          log(`Checking if "${targetFile}" exists`);
-          if (helper.fileExists(targetFile)) {
-            importPath = getDestImport(targetFile);
-            resolved = true;
-            log(`Path resolved to "${importPath}"`);
-            break;
+          if (resolvedFile) {
+            const getDestImport: (_: string) => string = resolver.sourceDir
+              ? (s) => helper.getDestImportFromProjectTS(destDir, s, rootDir, outDir)
+              : (s) => helper.getDestImportFromExternalJS(destDir, s);
+            // Update import path if it's resolved.
+            importPath = getDestImport(resolvedFile);
+          } else {
+            continue;
           }
         } // end of `for (const r of resolvers)`.
       } else {
         // `importPath` is relative.
         // Add js extension to relative paths.
-        const res = helper.jsPath(importPath);
-        log(`Relative path "${importPath}" resolved to "${res}"`);
-        importPath = res;
-        resolved = true;
+        resolvedFile = helper.jsPath(importPath);
+        log(`Relative path "${importPath}" resolved to "${resolvedFile}"`);
       }
 
       // NOTE: Never throw errors on unrecognized absolute module names, cuz they
       // might be node builtin modules.
 
-      if (resolved) {
+      if (resolvedFile) {
         // Convert windows path to posix path.
         importPath = importPath.replace(/\\/g, '/');
         if (ts.isImportDeclaration(node)) {
@@ -216,7 +196,7 @@ function importExportVisitor(
   return visitor;
 }
 
-export function transform(opts: Opts): ts.TransformerFactory<ts.SourceFile | ts.Bundle> {
+export function transform(opts: def.Opts): ts.TransformerFactory<ts.SourceFile | ts.Bundle> {
   if (!opts.rootDir) {
     throw new Error('Missing required argument `rootDir`');
   }
