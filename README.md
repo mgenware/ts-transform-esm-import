@@ -22,11 +22,11 @@ Rewrite TypeScript import paths to ES Modules import paths. **TypeScript 4.5+**!
 Before:
 
 ```ts
-// Modules in `node_modules`.
+// Files in `node_modules`.
 import 'npmModule';
 import 'npmModule/lib';
 
-// Modules in `tsconfig.baseUrl`.
+// Files resolved by `tsconfig.baseUrl`.
 import 'subDir/file';
 import 'rootFile';
 
@@ -38,11 +38,11 @@ import './subDir/file';
 After:
 
 ```ts
-// Modules in `node_modules`.
+// Files in `node_modules`.
 import '../node_modules/npmModule/dist/main.js';
 import '../node_modules/npmModule/lib.js';
 
-// Modules in `tsconfig.baseUrl`.
+// Files resolved by `tsconfig.baseUrl`.
 import './subDir/file.js';
 import './rootFile.js';
 
