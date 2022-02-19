@@ -108,7 +108,7 @@ To resolve paths in `node_modules`:
 }
 ```
 
-To resolve something similar to TypeScript `baseUrl` (NOTE: `sourceDir` has to be true as resolver needs to travel inside source directory):
+To resolve something similar to TypeScript `baseUrl`, set `sourceDir` to `true`, which indicates that we are travelling inside source directory:
 
 ```json
 {
@@ -125,6 +125,16 @@ To resolve both `baseUrl` and `node_modules` (with `baseUrl` first):
   "rootDir": "./src",
   "outDir": "./dist/src",
   "resolvers": [{ "dir": "./src", "sourceDir": true }, { "dir": "./node_modules" }]
+}
+```
+
+To apply a resolver only on a subset of imports, use the `filter` field (a regex value). For example, to rewrite imports start with `@myOrg/`:
+
+```json
+{
+  "rootDir": "./src",
+  "outDir": "./dist/src",
+  "resolvers": [{ "dir": "./node_modules", "filter": "^@myOrg/" }]
 }
 ```
 
