@@ -74,6 +74,12 @@ function importExportVisitor(
         const destDir = path.dirname(destFile);
 
         for (const resolver of resolvers) {
+          if (resolver.filter) {
+            if (!new RegExp(resolver.filter, 'i').test(importPath)) {
+              continue;
+            }
+          }
+
           // eslint-disable-next-line @typescript-eslint/no-loop-func
           const resolveAsCommonJSFunc = () =>
             (resolvedFile = rsv.resolveCJSImport(

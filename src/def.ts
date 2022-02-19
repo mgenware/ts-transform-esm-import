@@ -10,4 +10,5 @@ export interface PackageJSON {
 export interface Resolver {
   dir: string;
   sourceDir?: boolean;
+  filter?: string;
 }
