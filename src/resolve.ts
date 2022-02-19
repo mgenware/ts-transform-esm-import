@@ -8,10 +8,10 @@ function checkFileExistsAndLog(file: string, logger: Logger | null) {
   return helper.fileExists(file);
 }
 
-// Resolves the given import path like a regular CommonJS import.
+// Resolves the given import as a CommonJS import.
 // Example:
 //  resolverDir=a/b, importPath=c, returns a/b/c.js or a/b/c/index.js.
-export function resolveRegularCJMFile(
+export function resolveCJSImport(
   resolverDir: string,
   importPath: string,
   ts: boolean,
@@ -36,8 +36,8 @@ function formatSubPath(s: string): string {
   return s.startsWith('.') ? s : `./${s}`;
 }
 
-// Resolves the given import path under an ES module.
-export function resolveESM(
+// Resolves the given import in an ES module.
+export function resolveInESModule(
   // `node_modules` path.
   _resolverDir: string,
   // User import path in code.
@@ -58,7 +58,7 @@ export function resolveESM(
   // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (!exports) {
     throw new Error(
-      `Fatal error: the package "${pkgPath}" is ESM but doesn't have a valid entrypoint`,
+      `Fatal error: the package "${pkgPath}" is ESM but doesn't have a valid entry point`,
     );
   }
   if (typeof exports === 'string') {
@@ -94,8 +94,8 @@ export function resolveESM(
   }
 }
 
-// Resolves the given import path under a CommonJS module.
-export function resolveCJM(
+// Resolves the given import path in a CommonJS module.
+export function resolveInCJSModule(
   // `node_modules` path.
   _resolverDir: string,
   // User import path in code.
@@ -114,7 +114,7 @@ export function resolveCJM(
   const main = pkg.main ?? 'index.js';
   logger?.log(`Got \`main\`: ${JSON.stringify(exports)}`);
   if (hasSubImportPath) {
-    return resolveRegularCJMFile(moduleDir, importPath, false, logger);
+    return resolveCJSImport(moduleDir, importPath, false, logger);
   }
 
   // Some CommonJS modules have a `module` field pointing to ESM entry file.

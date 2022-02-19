@@ -1,7 +1,7 @@
 import * as cm from './common.js';
 
-it('Resolve baseDir', async () => {
-  const name = 'baseDir';
+it('Resolve baseUrl', async () => {
+  const name = 'baseUrl';
   cm.compile(name, {
     resolvers: [{ dir: cm.fixture(name), sourceDir: true }],
   });

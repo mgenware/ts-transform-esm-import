@@ -76,7 +76,7 @@ function importExportVisitor(
         for (const resolver of resolvers) {
           // eslint-disable-next-line @typescript-eslint/no-loop-func
           const resolveAsCommonJSFunc = () =>
-            (resolvedFile = rsv.resolveRegularCJMFile(
+            (resolvedFile = rsv.resolveCJSImport(
               resolver.dir,
               importPath,
               !!resolver.sourceDir,
@@ -114,7 +114,7 @@ function importExportVisitor(
               log(`"${packagePath}" is ESM? ${isESM}`);
               if (isESM) {
                 // ESM. Resolve using ESM logic.
-                resolvedFile = rsv.resolveESM(
+                resolvedFile = rsv.resolveInESModule(
                   resolver.dir,
                   importPath,
                   modulePath,
@@ -124,7 +124,7 @@ function importExportVisitor(
                 );
               } else {
                 // Not an ESM, resolving as a CommonJS module (CJM).
-                resolvedFile = rsv.resolveCJM(
+                resolvedFile = rsv.resolveInCJSModule(
                   resolver.dir,
                   importPath,
                   modulePath,
