@@ -14,10 +14,10 @@ function checkFileExistsAndLog(file: string, logger: Logger | null) {
 export function resolveCJSImport(
   resolverDir: string,
   importPath: string,
-  ts: boolean,
+  sourceDir: boolean,
   logger: Logger | null,
 ): string | null {
-  const addExt = ts ? helper.tsPath : helper.jsPath;
+  const addExt = sourceDir ? helper.tsPath : helper.jsPath;
 
   let targetFile = addExt(path.join(resolverDir, importPath));
   if (checkFileExistsAndLog(targetFile, logger)) {

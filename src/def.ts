@@ -11,4 +11,5 @@ export interface Resolver {
   dir: string;
   sourceDir?: boolean;
   filter?: string;
+  mode?: 'addExt';
 }

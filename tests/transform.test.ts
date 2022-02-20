@@ -203,3 +203,54 @@ import 'lib/sub';
 `,
   );
 });
+
+it('Mode = addExt', async () => {
+  const name = 'baseUrl';
+  cm.compile(name, {
+    resolvers: [{ dir: cm.fixture(name), sourceDir: true, mode: 'addExt', filter: '^foo' }],
+  });
+  await cm.verifyFile(
+    name,
+    'main',
+    `import { dummy } from './foo.js';
+import 'fs';
+import './lib/lib.js';
+console.log(dummy);
+export function foo(fn) {
+    return import('exports');
+}
+export { dummy2 } from './foo.js';
+export { lib1 } from 'singleFile/file';
+import 'lib/lib';
+import 'foo.js';
+`,
+    `import 'fs';
+import './lib/lib.js';
+export declare function foo(fn: any): Promise<any>;
+export { dummy2 } from './foo.js';
+export { lib1 } from 'singleFile/file';
+import 'lib/lib';
+import 'foo.js';
+`,
+  );
+  await cm.verifyFile(
+    name,
+    'lib/lib',
+    `import 'fs';
+import 'exports';
+import 'singleFile/file';
+import './sub.js';
+import 'foo.js';
+import '../foo.js';
+import 'lib/sub';
+`,
+    `import 'fs';
+import 'exports';
+import 'singleFile/file';
+import './sub.js';
+import 'foo.js';
+import '../foo.js';
+import 'lib/sub';
+`,
+  );
+});

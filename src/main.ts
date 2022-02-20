@@ -80,6 +80,23 @@ function importExportVisitor(
             }
           }
 
+          const { mode } = resolver;
+          if (mode) {
+            switch (mode) {
+              case 'addExt': {
+                resolvedFile = helper.jsPath(importPath);
+                log(`Import "${importPath}" resolved to "${resolvedFile}"`);
+                log(`✅ Updated import from "${importPath}" to "${resolvedFile}"`);
+                importPath = resolvedFile;
+                continue;
+              }
+
+              default: {
+                throw new Error(`Unknown mode "${mode}"`);
+              }
+            }
+          }
+
           // eslint-disable-next-line @typescript-eslint/no-loop-func
           const resolveAsCommonJSFunc = () =>
             (resolvedFile = rsv.resolveCJSImport(
