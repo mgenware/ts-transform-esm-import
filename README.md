@@ -91,14 +91,17 @@ An example `tsconfig.json`
 
 - `rootDir` source files root directory, should be the `rootDir` in `tsconfig.json`.
 - `outDir` output directory, should be the `outDir` in `tsconfig.json`.
-- `resolvers` a list of resolvers to resolve absolute import paths.
-  - `dir` search location for absolute import paths.
-  - `sourceDir`: `boolean` whether search location is in root dir.
 - `after`, `afterDeclarations`, `type` see [ts-patch Options](https://github.com/nonara/ts-patch).
+- `resolvers` a list of resolvers that define how imports are transformed.
+  - `dir`: `string` search location for imports.
+  - (Optional) `sourceDir`: `boolean` whether search location contains source files (ts files).
+  - (Optional) `filter`: `string` regex string, run resolver only when filter tests true
+  - (Optional) `mode`: `string` overrides default resolving mode, possible values:
+    - `addExt` only adds extensions to imports.
 
 ### Resolver examples
 
-To resolve paths in `node_modules`:
+To transform imports in `node_modules`:
 
 ```json
 {
@@ -108,7 +111,7 @@ To resolve paths in `node_modules`:
 }
 ```
 
-To resolve something similar to TypeScript `baseUrl`, set `sourceDir` to `true`, which indicates that we are travelling inside source directory:
+To transform imports using TypeScript `baseUrl`, set `sourceDir` to `true`, which indicates that we are travelling inside the source directory:
 
 ```json
 {
@@ -118,23 +121,43 @@ To resolve something similar to TypeScript `baseUrl`, set `sourceDir` to `true`,
 }
 ```
 
-To resolve both `baseUrl` and `node_modules` (with `baseUrl` first):
-
-```json
-{
-  "rootDir": "./src",
-  "outDir": "./dist/src",
-  "resolvers": [{ "dir": "./src", "sourceDir": true }, { "dir": "./node_modules" }]
-}
-```
-
-To apply a resolver only on a subset of imports, use the `filter` field (a regex value). For example, to rewrite imports start with `@myOrg/`:
+To apply a resolver only on a subset of imports, use the `filter` field (a regex value). For example, to rewrite imports starting with `@myOrg/`:
 
 ```json
 {
   "rootDir": "./src",
   "outDir": "./dist/src",
   "resolvers": [{ "dir": "./node_modules", "filter": "^@myOrg/" }]
+}
+```
+
+Sometimes the default resolving mode might confuse you. You can override it via the `mode` field. Currently, only one option (`addExt`) is supported, which simply adds a `.js` extension if needed.
+
+```json
+{
+  "rootDir": "./src",
+  "outDir": "./dist/src",
+  "resolvers": [{ "dir": "./node_modules", "mode": "addExt" }]
+}
+```
+
+You can combine multiple resolvers. For example, to do the following things altogether:
+
+- Add missing `.js` extensions to all imports starting with `@myOrg/`
+- Transform imports using TypeScript `baseUrl`
+- Transform imports in `node_modules`
+
+Use the following config:
+
+```json
+{
+  "rootDir": "./src",
+  "outDir": "./dist/src",
+  "resolvers": [
+    { "dir": "./node_modules", "filter": "^@myOrg/", "mode": "addExt" },
+    { "dir": "./src", "sourceDir": true },
+    { "dir": "./node_modules" }
+  ]
 }
 ```
 
