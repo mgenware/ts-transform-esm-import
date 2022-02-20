@@ -75,13 +75,16 @@ function importExportVisitor(
 
         for (const resolver of resolvers) {
           if (resolver.filter) {
+            log(`Got filter "${resolver.filter}"`);
             if (!new RegExp(resolver.filter, 'i').test(importPath)) {
+              log('Filter testing failed. Skipping this resolver');
               continue;
             }
           }
 
           const { mode } = resolver;
           if (mode) {
+            log(`Got mode "${mode}"`);
             switch (mode) {
               case 'addExt': {
                 resolvedFile = helper.jsPath(importPath);
