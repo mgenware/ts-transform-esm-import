@@ -79,7 +79,7 @@ An example `tsconfig.json`
         "type": "config",
 
         "rootDir": "./src",
-        "outDir": "./dist/src",
+        "outDir": "./dist",
         "resolvers": [{ "dir": "./src", "sourceDir": true }, { "dir": "./node_modules" }]
       }
     ]
@@ -106,7 +106,7 @@ To transform imports in `node_modules`:
 ```json
 {
   "rootDir": "./src",
-  "outDir": "./dist/src",
+  "outDir": "./dist",
   "resolvers": [{ "dir": "./node_modules" }]
 }
 ```
@@ -116,7 +116,7 @@ To transform imports using TypeScript `baseUrl`, set `sourceDir` to `true`, whic
 ```json
 {
   "rootDir": "./src",
-  "outDir": "./dist/src",
+  "outDir": "./dist",
   "resolvers": [{ "dir": "./src", "sourceDir": true }]
 }
 ```
@@ -126,7 +126,7 @@ To apply a resolver only on a subset of imports, use the `filter` field (a regex
 ```json
 {
   "rootDir": "./src",
-  "outDir": "./dist/src",
+  "outDir": "./dist",
   "resolvers": [{ "dir": "./node_modules", "filter": "^@myOrg/" }]
 }
 ```
@@ -136,7 +136,7 @@ Sometimes the default resolving mode might confuse you. You can override it via 
 ```json
 {
   "rootDir": "./src",
-  "outDir": "./dist/src",
+  "outDir": "./dist",
   "resolvers": [{ "dir": "./node_modules", "mode": "addExt" }]
 }
 ```
@@ -152,7 +152,7 @@ Use the following config:
 ```json
 {
   "rootDir": "./src",
-  "outDir": "./dist/src",
+  "outDir": "./dist",
   "resolvers": [
     { "dir": "./node_modules", "filter": "^@myOrg/", "mode": "addExt" },
     { "dir": "./src", "sourceDir": true },
