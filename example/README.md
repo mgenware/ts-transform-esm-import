@@ -2,6 +2,7 @@
 
 To run this example:
 
+- Go to the example directory
 - Install dependencies `npm i`
-- Build example `npm run build`
+- Build the example `npm run build`
 - You can now run transformed ESM JavaScript files in browser via `npm run demo`

@@ -16,7 +16,7 @@
         "type": "config",
 
         "rootDir": "./src",
-        "outDir": "./dist/src",
+        "outDir": "./dist",
         "resolvers": [{ "dir": "./src", "sourceDir": true }, { "dir": "./node_modules" }]
       }
     ]
