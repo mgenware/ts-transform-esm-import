@@ -197,7 +197,6 @@ function importExportVisitor(
         if (ts.isImportDeclaration(node)) {
           return ctx.factory.updateImportDeclaration(
             node,
-            node.decorators,
             node.modifiers,
             node.importClause,
             ctx.factory.createStringLiteral(importPath, true),
@@ -206,7 +205,6 @@ function importExportVisitor(
         } else if (ts.isExportDeclaration(node)) {
           return ctx.factory.updateExportDeclaration(
             node,
-            node.decorators,
             node.modifiers,
             node.isTypeOnly,
             node.exportClause,
@@ -223,7 +221,8 @@ function importExportVisitor(
         } else if (ts.isImportTypeNode(node)) {
           return ctx.factory.updateImportTypeNode(
             node,
-            ts.createLiteralTypeNode(ts.createStringLiteral(importPath, true)),
+            ctx.factory.createLiteralTypeNode(ctx.factory.createStringLiteral(importPath, true)),
+            node.assertions,
             node.qualifier,
             node.typeArguments,
             node.isTypeOf,
