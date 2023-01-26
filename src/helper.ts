@@ -9,12 +9,19 @@ export function pathWithExt(s: string, ext: string): string {
   return `${s}.${ext}`;
 }
 
+// a or a.js -> a.js
 export function jsPath(s: string): string {
   return pathWithExt(s, 'js');
 }
 
+// a or a.js -> a.ts
 export function tsPath(s: string): string {
-  return pathWithExt(s, 'ts');
+  const ext = path.extname(s);
+  if (ext === '.js') {
+    return `${s.substring(0, s.length - '.js'.length)}.ts`;
+  }
+
+  return `${s}.ts`;
 }
 
 export function fileExists(s: string): boolean {

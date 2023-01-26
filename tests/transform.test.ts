@@ -254,3 +254,25 @@ import 'lib/sub';
 `,
   );
 });
+
+it('.js to .ts when `sourceDir` is true', async () => {
+  const name = 'jsToTs';
+  cm.compile(name, {
+    resolvers: [{ dir: cm.fixture(name), sourceDir: true }],
+  });
+  await cm.verifyFile(
+    name,
+    'main',
+    `import { dummy } from './foo.js';
+import { dummy2 } from './foo.js';
+import 'fs';
+import './lib/lib.js';
+import './lib/lib.js';
+console.log(dummy, dummy2);
+`,
+    `import 'fs';
+import './lib/lib.js';
+import './lib/lib.js';
+`,
+  );
+});
