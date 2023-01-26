@@ -5,6 +5,11 @@
 
 Rewrite TypeScript import paths to ES Modules import paths. **TypeScript 4.5+**!. A fork of [ts-transform-import-path-rewrite](https://github.com/dropbox/ts-transform-import-path-rewrite).
 
+Supported TypeScript versions
+
+- 4.9+: latest version
+- 4.5 - 4.8: v0.9.0
+
 ## Features
 
 | Feature                 | Status | Note                                                     |
