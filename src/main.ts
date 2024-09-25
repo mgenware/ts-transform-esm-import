@@ -38,7 +38,7 @@ function importExportVisitor(
 
   const visitor: ts.Visitor = (node: ts.Node): ts.Node => {
     let importPath = '';
-    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier) {
+    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.positionIsSynthesized(node.pos) === false && ts.positionIsSynthesized(node.end) == false) {
       const importPathWithQuotes = node.moduleSpecifier.getText(sf);
       importPath = importPathWithQuotes.substr(1, importPathWithQuotes.length - 2);
     } else if (helper.isDynamicImport(node)) {
