@@ -39,19 +39,19 @@
     "@types/glob": "^8.0.1",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.11.18",
-    "@typescript-eslint/eslint-plugin": "^5.49.0",
-    "@typescript-eslint/parser": "^5.49.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "daizong": "^0.25.7",
-    "eslint": "^8.32.0",
-    "eslint-config-mgenware": "^0.9.0",
+    "eslint": "^8.57.1",
+    "eslint-config-mgenware": "^0.10.0",
     "eslint-plugin-import": "^2.27.5",
     "glob": "^8.1.0",
     "mgenware-tsconfig-node": "^14.0.2",
     "mocha": "^10.2.0",
     "source-map-support": "^0.5.21",
-    "typescript": "^5.4.2"
+    "typescript": ">=4.7.4 <5.6.0"
   },
   "peerDependencies": {
-    "typescript": "^5.4.2"
+    "typescript": ">=4.7.4 <5.6.0"
   }
 }
