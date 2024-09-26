@@ -72,7 +72,7 @@ export function getDestImportFromExternalJS(currentDir: string, targetFile: stri
 
 export function getDestFile(sf: ts.SourceFile, rootDir: string, outDir: string): string {
   if (!sf.fileName) {
-    throw new Error(`Unexpected empty file name at ${sf}`);
+    throw new Error(`Unexpected empty file name at ${sf.getText()}`);
   }
   const absPath = path.resolve(sf.fileName);
   const relPath = relativePath(rootDir, absPath);
